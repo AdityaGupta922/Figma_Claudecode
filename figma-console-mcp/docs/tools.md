@@ -1,0 +1,3410 @@
+---
+title: "Tools Reference"
+description: "Complete API reference for all 107 MCP tools, including parameters, return values, and usage examples."
+---
+
+# Available Tools - Detailed Documentation
+
+This guide provides detailed documentation for each tool, including when to use them and best practices.
+
+> **Note:** Local Mode (NPX/Git) provides **121 tools** with full read/write capabilities and real-time monitoring. Remote Mode provides **9 read-only tools** by default, or **101 tools** (including full write access) when paired with the Desktop Bridge plugin via Cloud Relay. Tools marked "Local" in the table below require Local Mode. Tools marked "Local / Cloud" work in both Local Mode and Cloud Mode (after pairing).
+
+## Quick Reference
+
+| Category | Tool | Purpose | Mode |
+|----------|------|---------|------|
+| **🧭 Navigation** | `figma_navigate` | Open a Figma URL and start monitoring | All |
+| | `figma_get_status` | Check browser and monitoring status | All |
+| | `figma_reconnect` | Reconnect to Figma Desktop | Local |
+| **📋 Console** | `figma_get_console_logs` | Retrieve console logs with filters | All |
+| | `figma_watch_console` | Stream logs in real-time | All |
+| | `figma_clear_console` | Clear log buffer | All |
+| **🔍 Debugging** | `figma_take_screenshot` | Capture UI screenshots | All |
+| | `figma_reload_plugin` | Reload current page | All |
+| **🔁 Token Sync** | `figma_export_tokens` | Export Figma variables to DTCG JSON + CSS (replaces Style Dictionary) | Local / Cloud |
+| | `figma_import_tokens` | Push code-side token edits back to Figma (diff-aware merge) | Local / Cloud |
+| **🧬 Design System Extraction** | `figma_ds_analyze` | Scan production codebase(s): component inventory, classification, architecture | Local |
+| | `figma_ds_extract_tokens` | Mine codebase styling into DTCG tokens with provenance | Local |
+| | `figma_ds_scaffold` | Generate the design-system package + token files + showcase docs | Local |
+| | `figma_ds_setup_storybook` | Wire a fresh Storybook workshop to the extracted system | Local |
+| | `figma_ds_extract_component` | Per-component porting manifest + CSF3 story scaffold | Local |
+| | `figma_ds_verify` | Deterministic fidelity evals + Figma round-trip readiness | Local |
+| | `figma_ds_status` | Read/record porting progress (persists across sessions) | Local |
+| **🎨 Design System** | `figma_get_variables` | Extract design tokens/variables | All |
+| | `figma_get_styles` | Get color, text, effect styles | All |
+| | `figma_get_component` | Get component data | All |
+| | `figma_get_component_for_development` | Component + visual reference | All |
+| | `figma_get_component_image` | Just the component image | All |
+| | `figma_get_file_data` | File structure with verbosity control | All |
+| | `figma_get_file_for_plugin` | File data optimized for plugins | All |
+| | `figma_get_design_system_kit` | **Full design system in one call** (tokens, components, styles, visual specs) | All |
+| | `figma_audit_design_system_report` | **Scored six-category health audit** with per-finding remediation, chunked drill-down, live-first data | Local |
+| | `figma_get_design_system_summary` | Overview of design system | Local / Cloud |
+| | `figma_get_token_values` | Get variable values by mode | Local / Cloud |
+| **✏️ Design Creation** | `figma_execute` | Run Figma Plugin API code | Local / Cloud |
+| | `figma_execute_across_files` | **Run the same code in several connected files at once**, concurrently | Local |
+| | `figma_create_component_set` | **Create a component set with variants in one call** — axes matrix or existing components | Local / Cloud |
+| | `figma_arrange_component_set` | Organize variants with labels | Local / Cloud |
+| | `figma_set_description` | Add component descriptions | Local / Cloud |
+| **🧩 Slots** | `figma_create_slot` | **Add a slot to a component** (auto-linked SLOT property; variants supported) | Local / Cloud |
+| | `figma_get_slots` | List slots on a component, set, or instance | Local / Cloud |
+| | `figma_append_to_slot` | **Populate an instance's slot** — clone a node or create content | Local / Cloud |
+| | `figma_reset_slot` | Clear a slot's content on an instance | Local / Cloud |
+| | `figma_add_slot_property` | Retrofit an existing frame as a slot (manual SLOT binding) | Local / Cloud |
+| **🧩 Components** | `figma_search_components` | Find components by name (local + library) | Local / Cloud |
+| | `figma_get_library_components` | Discover components from published libraries | Local |
+| | `figma_get_library_component_by_key` | **Resolve any component key to full props + variants + visual specs** — no library URL needed | Local / Cloud |
+| | `figma_get_component_details` | Get component details | Local / Cloud |
+| | `figma_instantiate_component` | Create component instance (local + library) | Local / Cloud |
+| **📚 Shared Library Variables** | `figma_get_library_variables` | List variables from subscribed libraries (no Enterprise plan needed) | Local / Cloud |
+| | `figma_import_library_variable` | Import a library variable into the current file | Local / Cloud |
+| | `figma_add_component_property` | Add component property | Local / Cloud |
+| | `figma_edit_component_property` | Edit component property | Local / Cloud |
+| | `figma_delete_component_property` | Remove component property | Local / Cloud |
+| **🔧 Variables** | `figma_create_variable_collection` | Create collections with modes | Local / Cloud |
+| | `figma_create_variable` | Create new variables | Local / Cloud |
+| | `figma_update_variable` | Update variable values | Local / Cloud |
+| | `figma_rename_variable` | Rename variables | Local / Cloud |
+| | `figma_delete_variable` | Delete variables | Local / Cloud |
+| | `figma_delete_variable_collection` | Delete collections | Local / Cloud |
+| | `figma_add_mode` | Add modes to collections | Local / Cloud |
+| | `figma_rename_mode` | Rename modes | Local / Cloud |
+| | `figma_batch_create_variables` | Create up to 100 variables at once | Local / Cloud |
+| | `figma_batch_update_variables` | Update up to 100 variables at once | Local / Cloud |
+| | `figma_setup_design_tokens` | Create collection + modes + variables atomically | Local / Cloud |
+| **🔍 Design-Code Parity** | `figma_check_design_parity` | Compare Figma specs vs code implementation | All |
+| | `figma_generate_component_doc` | Generate component documentation from Figma + code, with optional Figma version + git history | All |
+| **💬 Comments** | `figma_get_comments` | Get comments on a Figma file | All |
+| | `figma_post_comment` | Post a comment, optionally pinned to a node | All |
+| | `figma_delete_comment` | Delete a comment by ID | All |
+| **📝 Annotations** | `figma_get_annotations` | Read annotations from nodes (with optional child traversal) | Local / Cloud |
+| | `figma_set_annotations` | Write or clear annotations (plain text, markdown, pinned properties) | Local / Cloud |
+| | `figma_get_annotation_categories` | List available annotation categories | Local / Cloud |
+| **🔬 Deep Analysis** | `figma_get_component_for_development_deep` | Unlimited-depth component tree with resolved token names and instance refs | Local / Cloud |
+| | `figma_analyze_component_set` | Variant state machine with CSS pseudo-class mappings and cross-variant diffs | Local / Cloud |
+| **📐 Node Manipulation** | `figma_resize_node` | Resize a node | Local / Cloud |
+| | `figma_move_node` | Move a node | Local / Cloud |
+| | `figma_clone_node` | Clone a node | Local / Cloud |
+| | `figma_delete_node` | Delete a node | Local / Cloud |
+| | `figma_rename_node` | Rename a node | Local / Cloud |
+| | `figma_set_text` | Set text content | Local / Cloud |
+| | `figma_set_fills` | Set fill colors | Local / Cloud |
+| | `figma_set_strokes` | Set stroke colors | Local / Cloud |
+| | `figma_create_child` | Create child node | Local / Cloud |
+| **🖼️ Image** | `figma_set_image_fill` | Set image fill on nodes | Local / Cloud |
+| **🔍 Accessibility** | `figma_lint_design` | 14 WCAG checks with AA/best-practice level tagging | Local / Cloud |
+| | `figma_audit_component_accessibility` | Deep component scorecard: states, focus, color-blind simulation | Local / Cloud |
+| | `figma_scan_code_accessibility` | Scan HTML with axe-core (104 rules): ARIA, labels, landmarks, semantics | Local / Cloud |
+| **📌 FigJam** | `figjam_create_sticky` | Create a sticky note | Local / Cloud |
+| | `figjam_create_stickies` | Batch create up to 200 stickies | Local / Cloud |
+| | `figjam_create_connector` | Connect two nodes with optional label | Local / Cloud |
+| | `figjam_create_shape_with_text` | Create a labeled shape (diamond, ellipse, etc.) | Local / Cloud |
+| | `figjam_create_table` | Create a table with cell data | Local / Cloud |
+| | `figjam_create_code_block` | Create a code block | Local / Cloud |
+| | `figjam_auto_arrange` | Arrange nodes in grid/row/column layout | Local / Cloud |
+| | `figjam_get_board_contents` | Read all content from a FigJam board | Local / Cloud |
+| | `figjam_get_connections` | Read the connection graph | Local / Cloud |
+| **🕒 Version History** | `figma_get_file_versions` | List version history with author/label/timestamp metadata | All |
+| | `figma_get_file_at_version` | Snapshot a file (or specific nodes) at a past version | All |
+| | `figma_diff_versions` | Structured diff between two versions: page changes, component property/binding deltas | All |
+| | `figma_get_changes_since_version` | Convenience wrapper: diff against current HEAD | All |
+| | `figma_generate_changelog` | Markdown changelog with author enrichment, ready for release notes | All |
+| | `figma_blame_node` | Binary-search blame walker: find when (and by whom) a property/variant was introduced | All |
+| **☁️ Cloud Relay** | `figma_pair_plugin` | Generate pairing code for Desktop Bridge | Cloud |
+
+---
+
+## 🧭 Navigation & Status Tools
+
+### `figma_navigate`
+
+Switch the active Figma file target (Local Mode) or navigate the cloud headless browser to a file (Remote/Cloud Mode).
+
+**Usage:**
+```javascript
+figma_navigate({
+  url: 'https://www.figma.com/design/abc123/My-Design?node-id=1-2',
+  lock: true  // optional — pin this file as the target (Local Mode)
+})
+```
+
+**Local Mode:** Switches the active file among files that already have the Desktop Bridge plugin running. Does NOT launch a browser or open files — open the target file in Figma Desktop and run the Desktop Bridge plugin in it first.
+
+**`lock` (optional, Local Mode):** Pass `lock: true` to pin the target file. Once pinned, new plugin connections, reconnects, and your own selection/page changes in *other* files will not move the command target — so an AI agent can work in one file while you work in another without writes routing to the wrong file. The pin auto-releases when the pinned file's plugin disconnects or navigates to a different file; switching to another file (or passing `lock: false`) also releases it. Use `figma_list_open_files` to check the current `targetLocked` state before a write batch.
+
+**Remote/Cloud Mode:** Navigates the Cloudflare-hosted headless browser to the URL and starts monitoring.
+
+**Returns:**
+- Navigation status
+- Current URL
+- Connection or monitoring status
+- `locked` — whether the target is now pinned (Local Mode)
+
+---
+
+### `figma_get_status`
+
+Check connection and monitoring status. **In local mode, validates WebSocket transport connectivity and shows connection state.**
+
+**Usage:**
+```javascript
+figma_get_status()
+```
+
+**Returns:**
+- **Setup validation** (local mode only):
+  - `setup.valid` - Whether the WebSocket transport is available
+  - `setup.message` - Human-readable status
+  - `setup.transport` - Transport status (`websocket` or `none`)
+  - `setup.setupInstructions` - Step-by-step setup guide (if no transport available)
+  - `setup.ai_instruction` - Guidance for AI assistants
+- Browser connection status
+- Console monitoring active/inactive
+- Current URL (if navigated)
+- Number of captured console logs
+
+**Example Response (Local Mode - WebSocket Connected):**
+```json
+{
+  "mode": "local",
+  "setup": {
+    "valid": true,
+    "message": "✅ Figma Desktop connected via WebSocket (Desktop Bridge Plugin)"
+  }
+}
+```
+
+**Example Response (Local Mode - No Transport):**
+```json
+{
+  "mode": "local",
+  "setup": {
+    "valid": false,
+    "message": "❌ No connection to Figma Desktop",
+    "setupInstructions": {
+      "step1": "Install Desktop Bridge Plugin: Figma → Plugins → Development → Import from manifest",
+      "step2": "Run the plugin in your Figma file"
+    }
+  }
+}
+```
+
+**Best Practice:**
+- Call this tool first when starting a session in local mode
+- If `setup.valid` is false, guide user to install and run the Desktop Bridge Plugin
+
+---
+
+## 📋 Console Tools (Plugin Debugging)
+
+### `figma_get_console_logs`
+
+> **💡 Plugin Developers in Local Mode**: This tool works immediately - no navigation required!
+> Just check logs, run your plugin in Figma Desktop, check logs again. All `[Main]`, `[Swapper]`, etc. plugin logs appear instantly.
+
+Retrieve console logs with filters.
+
+**Usage:**
+```javascript
+figma_get_console_logs({
+  count: 50,           // Number of logs to retrieve (default: 100)
+  level: 'error',      // Filter by level: 'log', 'info', 'warn', 'error', 'debug', 'all'
+  since: 1234567890    // Unix timestamp (ms) - only logs after this time
+})
+```
+
+**Parameters:**
+- `count` (optional): Number of recent logs to retrieve (default: 100)
+- `level` (optional): Filter by log level (default: 'all')
+- `since` (optional): Unix timestamp in milliseconds - only logs after this time
+
+**Returns:**
+- Array of console log entries with:
+  - `timestamp`: Unix timestamp (ms)
+  - `level`: 'log', 'info', 'warn', 'error', 'debug'
+  - `message`: The log message
+  - `args`: Additional arguments passed to console method
+  - `stackTrace`: Stack trace (for errors)
+
+**Example:**
+```javascript
+// Get last 20 error logs
+figma_get_console_logs({ count: 20, level: 'error' })
+
+// Get all logs from last 30 seconds
+const thirtySecondsAgo = Date.now() - (30 * 1000);
+figma_get_console_logs({ since: thirtySecondsAgo })
+```
+
+---
+
+### `figma_watch_console`
+
+Stream console logs in real-time for a specified duration.
+
+**Usage:**
+```javascript
+figma_watch_console({
+  duration: 30,        // Watch for 30 seconds (default: 30, max: 300)
+  level: 'all'         // Filter by level (default: 'all')
+})
+```
+
+**Parameters:**
+- `duration` (optional): How long to watch in seconds (default: 30, max: 300)
+- `level` (optional): Filter by log level (default: 'all')
+
+**Returns:**
+- Real-time stream of console logs captured during the watch period
+- Summary of total logs captured by level
+
+**Use case:** Perfect for monitoring console output while you test your plugin manually.
+
+---
+
+### `figma_clear_console`
+
+Clear the console log buffer.
+
+**Usage:**
+```javascript
+figma_clear_console()
+```
+
+**Returns:**
+- Confirmation of buffer cleared
+- Number of logs that were cleared
+
+---
+
+## 🔍 Debugging Tools
+
+### `figma_take_screenshot`
+
+Capture screenshots of Figma UI.
+
+**Usage:**
+```javascript
+figma_take_screenshot({
+  target: 'plugin',           // 'plugin', 'full-page', or 'viewport'
+  format: 'png',              // 'png' or 'jpeg'
+  quality: 90,                // JPEG quality 0-100 (default: 90)
+  filename: 'my-screenshot'   // Optional filename
+})
+```
+
+**Parameters:**
+- `target` (optional): What to screenshot
+  - `'plugin'`: Just the plugin UI (default)
+  - `'full-page'`: Entire scrollable page
+  - `'viewport'`: Current visible viewport
+- `format` (optional): Image format (default: 'png')
+- `quality` (optional): JPEG quality 0-100 (default: 90)
+- `filename` (optional): Custom filename
+
+**Returns:**
+- Screenshot image
+- Metadata (dimensions, format, size)
+
+---
+
+### `figma_reload_plugin`
+
+Reload the current Figma page.
+
+**Usage:**
+```javascript
+figma_reload_plugin({
+  clearConsole: true   // Clear console logs before reload (default: true)
+})
+```
+
+**Returns:**
+- Reload status
+- New page URL (if changed)
+
+---
+
+## 🔁 Token Sync Tools
+
+Bidirectional design token synchronization between Figma variables and your codebase — replaces Style Dictionary and Tokens Studio's export pipeline for popular styling methods.
+
+The canonical pivot format is **DTCG JSON** (W3C Design Tokens Community Group spec), in your choice of dialect: the legacy hex-string form (default) or the DTCG 2025.10 object form. All ten output formats listed below are fully implemented. Import applies the complete diff plan back to Figma — value updates, creates, renames, alias writes, and (under `replace`) deletes.
+
+### `figma_export_tokens`
+
+Export Figma variables to design token files in your codebase. Pulls every variable across every collection and mode, normalizes to the internal token model, and fans out to one or more output formats.
+
+**Usage (zero-arg with `tokens.config.json`):**
+
+```
+figma_export_tokens()
+```
+
+**Usage (explicit format):**
+
+```javascript
+figma_export_tokens({
+  format: "dtcg",
+  outputPath: "src/styles/tokens",
+  splitByMode: true,
+  splitByCollection: true,
+  prefix: "ds-"
+})
+```
+
+**Output formats:**
+
+| Format | Notes |
+|---|---|
+| `dtcg` | W3C Design Tokens Community Group standard JSON. Canonical pivot format. Round-trip safe via `$extensions["figma-console-mcp"]` (Figma variable IDs preserved across sync). Dialect selectable via `dtcgDialect` (see below). |
+| `css-vars` | CSS custom properties. `:root { ... }` blocks with mode-aware selectors (`.dark`, `[data-theme="..."]`). Composite typography expands to primitive vars. |
+| `tailwind-v4` | Tailwind v4 `@theme inline { ... }` block. Token-to-namespace mapping generates utility classes (`bg-primary`, `text-foreground`, `rounded-lg`, etc.). |
+| `tailwind-v3` | `module.exports = { colors: ... }` grouped under Tailwind v3 theme keys (`colors`, `spacing`, `fontFamily`, `borderRadius`). Spread into `tailwind.config.js`'s `theme.extend`. |
+| `scss` | `$var: value;` SCSS variables. Multi-mode tokens emit a primary `$var` plus a `$var--modes` SCSS map for runtime `map-get` access. |
+| `ts-module` | `export const tokens = { ... } as const` with derived `type Tokens = typeof tokens`. Multi-mode tokens emit as `{ Light: ..., Dark: ... }` objects. |
+| `json-flat` | Flat key-value JSON (`{"ds-color-primary": "#4085F2"}`). Non-primary modes get a `--<mode>` suffix on keys. For custom build scripts. |
+| `json-nested` | Nested object JSON mirroring the token path tree. Multi-mode tokens emit as mode-keyed sub-objects. Alphabetical key ordering. |
+| `style-dictionary-v3` | Style Dictionary v3 bare-key source format (`{value, type, comment}` — no `$` prefix). Back-compat for existing SD users. |
+| `tokens-studio` | Tokens Studio for Figma's multi-file layout: `$themes.json` + `$metadata.json` + per-set files (e.g. `theme/light.json`, `theme/dark.json`). Preserves Figma collection/mode bindings for round-trip with the TS plugin. |
+
+**DTCG dialect (`dtcgDialect`):**
+
+| Value | Behavior |
+|---|---|
+| `"legacy"` (default) | Hex-string colors (`"#4085F2"`), bare-number dimensions. Byte-identical to prior releases — maximum compatibility with Style Dictionary v4 and Tokens Studio. |
+| `"2025"` | DTCG 2025.10 object forms: colors as `{ colorSpace: "srgb", components, alpha, hex }` (built from Figma's full-precision floats, not re-derived from quantized hex) and dimensions as `{ value, unit: "px" }`. For Style Dictionary v5+ and other 2025.10-aware toolchains. |
+
+Import accepts **both** dialects unconditionally — no flag needed on `figma_import_tokens`, and mixed-dialect token files diff correctly (object colors compare equal to their hex equivalents, `{ value: 16, unit: "px" }` equals `16`).
+
+**Diff-aware merge:** Default `strategy: "merge"` only writes files whose content actually changed. Use `strategy: "dry-run"` to preview without writing. Use `strategy: "replace"` to wipe and rewrite.
+
+**Round-trip safety:** Every exported token carries its Figma `variableId` and `collectionId` in DTCG `$extensions["figma-console-mcp"]`. Renames on either side don't create duplicates — the ID is the primary match key. Also stamps `lastSyncedValue` (per-mode snapshot) and `lastSyncedAt` so two-sided conflicts can be detected on import, plus variable `scopes` (omitted when default) and per-platform `codeSyntax` so metadata survives the round-trip.
+
+**Cloud Mode:** Omit `configPath` and `outputPath`. The tool returns token content inline in the response; have your AI client write the files via its own Edit/Write tools. File I/O (autodiscovery, automatic writes) is Local Mode only.
+
+**Cross-library aliases:** Variables that reference targets in a published library (not in this file's local variable set) get stamped with `{__library:VariableID:...}` references — the original Figma ID is preserved for round-trip. CSS formatters emit a comment for skipped tokens with the original library variable ID, so you can see exactly what's missing and decide how to handle it.
+
+---
+
+### `figma_import_tokens`
+
+Push code-side token edits back to Figma. Parses any supported source format, diffs against current Figma state, and applies only the deltas via the Plugin API.
+
+**Usage (zero-arg with `tokens.config.json`):**
+
+```
+figma_import_tokens()
+```
+
+**Usage (inline payload):**
+
+```javascript
+figma_import_tokens({
+  format: "dtcg",
+  payload: "{ \"color\": { \"primary\": { \"$type\": \"color\", \"$value\": \"#FF00AA\" } } }",
+  strategy: "dry-run"   // preview first
+})
+```
+
+**Strategies:**
+
+| Strategy | Behavior |
+|---|---|
+| `merge` | Default. Apply only changed values. Preserve Figma-only and code-only tokens unless the conflict-resolution rule says otherwise. |
+| `replace` | Wipe and rewrite. Destructive — requires explicit `replace`, never the default. |
+| `dry-run` | Compute the diff plan, return it, do not mutate Figma. |
+
+**Match priority** (how a code-side token gets paired to a Figma variable):
+
+1. **Figma variable ID** stored in `$extensions["figma-console-mcp"].variableId`. Survives renames.
+2. **Token path** (e.g. `color.primary`). Used when metadata is absent (first sync, hand-authored DTCG).
+3. **Value fingerprint.** Used to detect no-op writes — same hash means no API call.
+
+**Conflict handling:** When both Figma and code changed the same token since the last sync, `onConflict: "ask"` (default) surfaces the conflict and writes nothing. Use `"figma-wins"` / `"code-wins"` to auto-resolve, or `"skip"` to leave conflicts alone and proceed with the rest.
+
+**What the apply phase does:**
+
+- ✅ `toUpdate` (value changes on existing variables): applied via the plugin bridge (`figma.variables.setValueForMode`). Multi-mode supported. Renames matched by round-trip variable ID apply as name changes on the existing variable — a token-path rename never becomes a create+delete pair. `scopes` and `codeSyntax` metadata changes apply too (a code-side absent field means "no opinion" and never resets Figma metadata).
+- ✅ `toCreate` (new variables and collections): missing collections are created with their full mode lists; missing variables are created with inferred or round-trip-recorded types, values set across all modes in dependency order — literal values first, alias values in a second pass so their targets exist. TIMING/EASING tokens are skipped with a clear warning (the Plugin API cannot create those types).
+- ✅ Alias updates (code-side `{color.primary}` references): written as real `{ type: "VARIABLE_ALIAS", id }` values. Resolver priority: just-created variable → live Figma snapshot → pending in this batch → recorded `$extensions` variable ID. Unresolvable references are skipped with a warning.
+- ✅ `toDelete` (Figma-only variables): applied **only** under `strategy: "replace"`, and announced loudly in the response. The default `merge` strategy reports them without deleting.
+
+Partial-success semantics throughout — per-variable errors don't fail the batch; results are returned in `applyResult.errors[]`.
+
+**Cloud Mode:** Pass tokens inline via `payload` (single file) or `files` (multi-file). Omit `configPath`. The apply phase works in Cloud Mode because it routes through the paired Desktop Bridge plugin via the Cloud Plugin Relay — transport-agnostic.
+
+---
+
+## 🧬 Design System Extraction Tools
+
+> **⚠️ Local Mode only**: These tools read a production codebase and write a design-system package to your local filesystem — something the cloud deployment cannot do. They are registered only in Local Mode (NPX / Local Git) and never appear in Cloud or Remote Mode tool lists.
+
+Turn a production codebase into a design system. The tools run in order:
+
+1. **`figma_ds_analyze`** — scan the app(s): component inventory, classification, architecture picture
+2. **`figma_ds_extract_tokens`** — mine the styling into DTCG tokens
+3. **`figma_ds_scaffold`** — generate the design-system package, then run `npm create storybook@latest` inside it
+4. **`figma_ds_setup_storybook`** — wire the fresh workshop to the extracted system
+5. Per component: **`figma_ds_extract_component`** → port it → record with **`figma_ds_status`**
+6. **`figma_ds_verify`** — deterministic fidelity evals before handoff or pushing tokens to Figma
+
+For design-led organizations, the extracted `tokens/tokens.json` imports straight into Figma variables with `figma_import_tokens` (top-level groups become collections) — a full code → design system → Figma round-trip.
+
+All manifests persist under `<outDir>/.extraction/`, so a long engagement survives session boundaries.
+
+### `figma_ds_analyze`
+
+Analyze one or more production app codebases as the first step of extraction. Detects framework (React/Next/Angular/Web Components), styling methods (Tailwind v3/v4, CSS Modules, SCSS, Emotion, styled-components), and vendor component layers (shadcn/ui, Radix, MUI, Chakra, etc.); builds a component inventory with per-component classification (vendored / wrapped / pure-vendor / bespoke), prop contracts, real usage counts (porting rank), observed prop values (variant inference), and duplicate detection. Iconography and typography rules are captured for the scaffold's showcase pages.
+
+It also classifies the **architecture** — the difference between a UI kit and a design system. An app ships `FollowButton`, `ModerationMenu`, `NodeCard` (components named after usage); a design system ships `Button`, `Menu`, `Card`. The analyzer assigns atomic levels, detects specializations (`FollowButton` → `Button`), and derives `missingPrimitives`: the generic components the specializations imply but that don't exist in the codebase — your design-system build list.
+
+**When to Use:**
+- Starting a design-system engagement from an existing product codebase
+- Deciding what to build: which components are worth porting, which are vendor pass-throughs, which usage-named components should collapse into generic primitives
+- Finding the shared design language across several apps (pass multiple targets — inventories merge and cross-app duplicates are flagged)
+
+**Usage:**
+```javascript
+figma_ds_analyze({
+  targets: ["/absolute/path/to/app"],          // multiple targets = cross-app extraction
+  outDir: "/absolute/path/to/design-system",   // optional; default: <first target>/design-system
+  exclude: ["legacy/"],                        // optional substring filters
+  maxFiles: 5000
+})
+```
+
+**Parameters:**
+- `targets` (required): App root directories. **Absolute paths strongly recommended** — the MCP server's working directory is not your project.
+- `outDir` (optional): Where the design-system package will be generated; manifests persist under `<outDir>/.extraction/`. Default: `<first target>/design-system`.
+- `include` / `exclude` (optional): Substring filters on relative paths (`node_modules`, `dist`, `.next`, etc. are always skipped).
+- `maxFiles` (optional): Hard cap on files scanned per target (default 5000).
+
+**Returns:** A compressed summary — per-target detection results, inventory counts by classification, top components by usage, duplicate groups, and the architecture summary (specializations + missing primitives) — plus the path to the full manifest at `<outDir>/.extraction/analysis.json`. Read slices of the manifest for detail.
+
+---
+
+### `figma_ds_extract_tokens`
+
+Extract design tokens from the analyzed codebase into canonical DTCG JSON (plus optional CSS variables / Tailwind / SCSS / TypeScript projections via the same formatter engine as `figma_export_tokens`).
+
+Mining runs in two confidence tiers:
+
+1. **Declared** styling intent — `:root` and `@theme` custom properties (light + dark blocks across framework conventions: `.dark`, `[data-theme=…]`, `[data-mode=…]`, `prefers-color-scheme` → multi-mode tokens), SCSS variables, `tailwind.config` theme values, shadcn HSL triples. These keep their names and always become tokens.
+2. **Inferred** — recurring raw values (hex colors, spacing/radius/font sizes) promoted above a frequency threshold; everything below the threshold is listed in the report for human review instead of silently dropped. Tailwind utility classes used in markup are frequency-mined and valued from the app's **own installed theme**, so the values are version-accurate rather than from a hardcoded palette.
+
+Every token carries provenance — source `file:line`, confidence tier, frequency — in `$extensions`. Names stay structural as mined (`color/blue/500`); do a semantic-naming review pass with the user afterwards (role names layer on as aliases).
+
+**Usage:**
+```javascript
+figma_ds_extract_tokens({
+  outDir: "/absolute/path/to/design-system",  // same outDir as figma_ds_analyze
+  formats: ["dtcg", "css-vars", "tailwind-v4"],  // match the app's styling method
+  minFrequency: 4,      // promotion threshold for undeclared raw values
+  write: true           // false = dry run, returns the DTCG document inline
+})
+```
+
+**Parameters:**
+- `outDir` (optional): The outDir used in `figma_ds_analyze` (reads `.extraction/analysis.json` from it). Pass explicitly when in doubt.
+- `targets` (optional): Override — scan these app roots instead of the analysis manifest's targets (rarely needed).
+- `formats` (optional, default `["dtcg", "css-vars"]`): Token file formats to write under `<outDir>/tokens/`. `dtcg` (canonical) is always written; the full format list matches `figma_export_tokens`.
+- `dtcgDialect` (optional, default `"legacy"`): `"legacy"` hex-string colors (max compatibility) or `"2025"` DTCG 2025.10 object colors/dimensions.
+- `minFrequency` (optional, default 4): How often a raw value must recur to be promoted to a token.
+- `write` (optional, default `true`): Write files, or return the document inline (dry run).
+
+**Returns:** Token counts by tier and type, set/mode structure, warnings, a below-threshold sample for review, and the list of files written. The DTCG output at `tokens/tokens.json` is directly importable via `figma_import_tokens` — top-level groups become Figma variable collections.
+
+---
+
+### `figma_ds_scaffold`
+
+Generate the design-system package skeleton at `outDir` from a completed analysis + token extraction: `package.json` (app framework as peer deps), `src/components` layout, token files via the shared formatter engine, framework-neutral token/typography/iconography showcase MDX docs pages (the bird's-eye view of what was mined), and a README with the workflow.
+
+Storybook itself is **not** installed by this tool — after scaffolding, run `npm create storybook@latest` inside `outDir`. The Storybook CLI auto-detects the framework and installs the current version, so the scaffold never bakes version-pinned Storybook templates that rot.
+
+**Usage:**
+```javascript
+figma_ds_scaffold({
+  outDir: "/absolute/path/to/design-system",
+  packageName: "@acme/design-system",   // default: @extracted/design-system
+  force: false                          // existing files are skipped unless true
+})
+```
+
+**Parameters:**
+- `outDir` (required): The outDir used in `figma_ds_analyze` / `figma_ds_extract_tokens`.
+- `packageName` (optional): npm package name for the design system.
+- `framework` (optional): Override the scaffold framework (default: first framework detected by the analysis). Note: Storybook has no `.astro` renderer — `astro` scaffolds a react-vite workshop whose stories mirror the component markup.
+- `formats` / `dtcgDialect` (optional): Token formats to (re)generate under `tokens/`.
+- `force` (optional, default `false`): Overwrite existing scaffold files (token files always refresh).
+
+**Returns:** Files written/skipped and next steps. Additive by default — safe to re-run.
+
+---
+
+### `figma_ds_setup_storybook`
+
+Wire a freshly-initialized Storybook workshop to the extracted design system — run **after** `npm create storybook@latest` inside `outDir`. A stock workshop knows nothing about the source app; each piece this generates corresponds to a real render-fidelity failure found in live extraction runs:
+
+- **`.storybook/preview.css`** — Tailwind entry importing the extracted tokens plus the **source app's** `@theme` utility mapping, custom `@utility` definitions, `@layer base`, and `@font-face` rules mined from its stylesheets, with a dark variant covering both `.dark` and `[data-theme]` conventions
+- **Font copying** — self-hosted font files copied into `staticDirs`, with runtime-var fallbacks
+- **`main.js` patch** — Tailwind vite plugin + automatic JSX runtime (without it, stories throw `React is not defined`)
+- **`preview.jsx` patch** — preview.css import + a theme toolbar/decorator that sets both the class and `data-theme` conventions, using the extracted mode names
+
+**Usage:**
+```javascript
+figma_ds_setup_storybook({
+  outDir: "/absolute/path/to/design-system"   // must contain a fresh .storybook/
+})
+```
+
+**Parameters:**
+- `outDir` (required): The design-system package dir (same outDir as `figma_ds_analyze`) containing the freshly-initialized `.storybook/`.
+
+**Returns:** What was generated/patched, plus any manual steps for things it couldn't patch safely. Idempotent — safe to re-run. Restart the Storybook dev server afterwards; `@import`ed CSS changes are not always hot-reloaded.
+
+---
+
+### `figma_ds_extract_component`
+
+Deep-extract **one** component from the inventory for porting into the design system: source (capped at 64KB), local import closure (relative imports to follow), prop contract, observed call-site variants, vendor classification, style touchpoints (classNames, CSS-module imports, custom properties referenced), and a ready-to-adapt CSF3 story scaffold with variant stories inferred from real usage.
+
+The agent then ports the component into `<outDir>/src/components/<Name>/` and records progress with `figma_ds_status`.
+
+**Usage:**
+```javascript
+figma_ds_extract_component({
+  outDir: "/absolute/path/to/design-system",
+  component: "Button"    // name from the inventory (see figma_ds_analyze topByUsage)
+})
+```
+
+**Parameters:**
+- `outDir` (required): The outDir used in `figma_ds_analyze`.
+- `component` (required): Component name from the inventory. Near-miss names come back as suggestions.
+
+**Returns:** The porting manifest plus a `portingChecklist` (decouple app-specific imports, replace hardcoded values with tokens, adapt the story scaffold, verify visually, record status). Pure-vendor components return guidance instead of source — theme them via tokens and document approved usage, or wrap them in the design system if customization is needed.
+
+---
+
+### `figma_ds_verify`
+
+Run the deterministic fidelity evals on an extracted design-system package — the governance gate before handing off or pushing tokens to Figma. Each check encodes a failure class found in real extraction runs:
+
+| Check | Catches |
+|---|---|
+| DTCG parse + alias integrity | `tokens.json` that won't import, dangling `{alias}` references |
+| Quoted-CSS-expression scan | Quoted functional expressions (`"cubic-bezier(...)"`) in generated token files — they silently kill transitions |
+| Workshop `var()` resolution | `var(--x)` consumed in component/preview CSS with no definition anywhere in the workshop |
+| Structure | Component directories missing a stories file or index barrel |
+| Porting coverage | Portable inventory components with no recorded porting status |
+
+Also reports **Figma round-trip readiness** with the exact `figma_import_tokens` call for design-led orgs (ask the user: code-led or design-led?).
+
+**Usage:**
+```javascript
+figma_ds_verify({ outDir: "/absolute/path/to/design-system" })
+```
+
+**Parameters:**
+- `outDir` (required): The design-system package dir.
+
+**Returns:** `{ passed, checks: [{ name, status: pass|fail|warn|skip, details }], figmaRoundTrip: { ready, how } }`.
+
+---
+
+### `figma_ds_status`
+
+Read or update porting progress, persisted in `<outDir>/.extraction/status.json` so long engagements survive session boundaries.
+
+**Usage:**
+```javascript
+// Read progress
+figma_ds_status({ outDir: "/absolute/path/to/design-system" })
+
+// Record a component's status
+figma_ds_status({
+  outDir: "/absolute/path/to/design-system",
+  update: {
+    component: "Button",
+    status: "ported",              // pending | in-progress | ported | skipped
+    notes: "Merged FollowButton + SubscribeButton into variants",
+    storyFile: "src/components/Button/Button.stories.jsx"
+  }
+})
+```
+
+**Parameters:**
+- `outDir` (required): The outDir used in `figma_ds_analyze`.
+- `update` (optional): `{ component, status, notes?, storyFile? }`. Omit to just read progress.
+
+**Returns:** Status counts, the next components remaining, and the manifest path.
+
+---
+
+## 🎨 Design System Tools
+
+> **⚠️ All Design System tools require `FIGMA_ACCESS_TOKEN`** configured in your MCP client.
+>
+> See [Installation Guide](../README.md#step-2-add-your-figma-access-token-for-design-system-tools) for setup instructions.
+
+### `figma_get_variables`
+
+Extract design tokens/variables from a Figma file. Supports both main files and branches.
+
+**Usage:**
+```javascript
+figma_get_variables({
+  fileUrl: 'https://figma.com/design/abc123',
+  includePublished: true,                        // Include published library variables
+  enrich: true,                                  // Add CSS/Tailwind exports
+  export_formats: ['css', 'tailwind', 'sass'],   // Export formats
+  include_usage: true,                           // Show where variables are used
+  include_dependencies: true                     // Show variable dependencies
+})
+```
+
+**Branch Support:**
+
+The tool automatically detects and handles Figma branch URLs in both formats:
+
+```javascript
+// Path-based branch URL
+figma_get_variables({
+  fileUrl: 'https://figma.com/design/abc123/branch/xyz789/My-File'
+})
+
+// Query-based branch URL
+figma_get_variables({
+  fileUrl: 'https://figma.com/design/abc123/My-File?branch-id=xyz789'
+})
+```
+
+**Auto-Detection:** If you've navigated to a file using `figma_navigate`, you can omit `fileUrl` entirely:
+
+```javascript
+// First navigate to the branch
+figma_navigate({ url: 'https://figma.com/design/abc123/branch/xyz789/My-File' })
+
+// Then get variables from the current file
+figma_get_variables({ refreshCache: true })
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL - supports main files and branches (uses current if navigated)
+- `includePublished` (optional): Include published variables (default: true)
+- `enrich` (optional): Add exports and usage analysis (default: false)
+- `export_formats` (optional): Code formats to generate
+- `include_usage` (optional): Include usage in styles/components
+- `include_dependencies` (optional): Include dependency graph
+- `refreshCache` (optional): Force fresh data fetch, bypassing cache
+
+**Returns:**
+- Variable collections
+- Variables with modes and values
+- Summary statistics
+- Export code (if `enrich: true`)
+- Usage information (if `include_usage: true`)
+- Branch info (when using branch URL): `fileKey`, `branchId`, `isBranch`
+
+**Note:** Figma Variables API requires Enterprise plan. If unavailable, the tool automatically falls back to Styles API or console-based extraction.
+
+---
+
+### `figma_get_styles`
+
+Get all styles (color, text, effects) from a Figma file.
+
+**Usage:**
+```javascript
+figma_get_styles({
+  fileUrl: 'https://figma.com/design/abc123',
+  enrich: true,                                  // Add code exports
+  export_formats: ['css', 'tailwind'],           // Export formats
+  include_usage: true,                           // Show component usage
+  include_exports: true                          // Include code examples
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL
+- `enrich` (optional): Add exports and usage (default: false)
+- `export_formats` (optional): Code formats to generate
+- `include_usage` (optional): Show where styles are used
+- `include_exports` (optional): Include code examples
+
+**Returns:**
+- All styles (color, text, effect, grid)
+- Style metadata and properties
+- Export code (if `enrich: true`)
+- Usage information (if requested)
+
+---
+
+### `figma_get_component`
+
+Get component data in two export formats: metadata (default) or reconstruction specification.
+
+**Usage:**
+```javascript
+// Metadata format (default) - for documentation and style guides
+figma_get_component({
+  fileUrl: 'https://figma.com/design/abc123',
+  nodeId: '123:456',
+  format: 'metadata',  // or omit for default
+  enrich: true         // Add token coverage analysis
+})
+
+// Reconstruction format - for programmatic component creation
+figma_get_component({
+  fileUrl: 'https://figma.com/design/abc123',
+  nodeId: '123:456',
+  format: 'reconstruction'  // Compatible with Figma Component Reconstructor plugin
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL
+- `nodeId` (required): Component node ID (e.g., '123:456')
+- `format` (optional): Export format - `'metadata'` (default) or `'reconstruction'`
+- `enrich` (optional): Add quality metrics (default: false, only for metadata format)
+
+**Export Formats:**
+
+**Metadata Format** (default):
+- Component metadata and documentation
+- Properties and variants
+- Bounds and layout info
+- Token coverage (if `enrich: true`)
+- Use for: Documentation, style guides, design system references
+
+**Reconstruction Format**:
+- Complete node tree specification
+- All visual properties (fills, strokes, effects)
+- Layout properties (auto-layout, padding, spacing)
+- Text properties with font information
+- Color values in 0-1 normalized RGB format
+- Validation of spec against plugin requirements
+- Use for: Programmatic component creation, version control, component migration
+- Compatible with: Figma Component Reconstructor plugin
+
+---
+
+### `figma_get_component_for_development`
+
+Get component data optimized for UI implementation, with visual reference.
+
+**Usage:**
+```javascript
+figma_get_component_for_development({
+  fileUrl: 'https://figma.com/design/abc123',
+  nodeId: '695:313',
+  includeImage: true   // Include rendered image (default: true)
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL
+- `nodeId` (required): Component node ID
+- `includeImage` (optional): Include rendered image (default: true)
+
+**Returns:**
+- Component image (rendered at 2x scale)
+- Filtered component data with:
+  - Layout properties (auto-layout, padding, spacing)
+  - Visual properties (fills, strokes, effects)
+  - Typography
+  - Component properties and variants
+  - Bounds and positioning
+
+**Excludes:** Plugin data, document metadata (optimized for UI implementation)
+
+---
+
+### `figma_get_component_image`
+
+Render a component as an image only.
+
+**Usage:**
+```javascript
+figma_get_component_image({
+  fileUrl: 'https://figma.com/design/abc123',
+  nodeId: '695:313',
+  scale: 2,              // Image scale (0.01-4, default: 2)
+  format: 'png'          // 'png', 'jpg', 'svg', 'pdf'
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL
+- `nodeId` (required): Node ID to render
+- `scale` (optional): Scale factor (default: 2)
+- `format` (optional): Image format (default: 'png')
+
+**Returns:**
+- Image URL (expires after 30 days)
+- Image metadata
+
+---
+
+### `figma_get_file_data`
+
+Get file structure with verbosity control.
+
+**Usage:**
+```javascript
+figma_get_file_data({
+  fileUrl: 'https://figma.com/design/abc123',
+  depth: 2,                  // Levels of children (0-3, default: 1)
+  verbosity: 'standard',     // 'summary', 'standard', 'full'
+  nodeIds: ['123:456'],      // Specific nodes only (optional)
+  enrich: true               // Add file statistics and health metrics
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL
+- `depth` (optional): Depth of children tree (max: 3)
+- `verbosity` (optional): Data detail level
+  - `'summary'`: IDs, names, types only (~90% smaller)
+  - `'standard'`: Essential properties (~50% smaller)
+  - `'full'`: Everything
+- `nodeIds` (optional): Retrieve specific nodes only
+- `enrich` (optional): Add statistics and metrics
+
+**Returns:**
+- File metadata
+- Document tree (filtered by verbosity)
+- Component/style counts
+- Statistics (if `enrich: true`)
+
+---
+
+### `figma_get_file_for_plugin`
+
+Get file data optimized for plugin development.
+
+**Usage:**
+```javascript
+figma_get_file_for_plugin({
+  fileUrl: 'https://figma.com/design/abc123',
+  depth: 3,                  // Higher depth allowed (max: 5)
+  nodeIds: ['123:456']       // Specific nodes (optional)
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL
+- `depth` (optional): Depth of children (max: 5, default: 2)
+- `nodeIds` (optional): Specific nodes only
+
+**Returns:**
+- Filtered file data with:
+  - IDs, names, types
+  - Plugin data (pluginData, sharedPluginData)
+  - Component relationships
+  - Lightweight bounds
+  - Structure for navigation
+
+**Excludes:** Visual properties (fills, strokes, effects) - optimized for plugin work
+
+---
+
+## Tool Comparison
+
+### When to Use Each Tool
+
+**For Component Development:**
+- `figma_get_component_for_development` - Best for implementing UI components (includes image + layout data)
+- `figma_get_component_image` - Just need a visual reference
+- `figma_get_component` - Need full component metadata
+
+**For Plugin Development:**
+- `figma_get_file_for_plugin` - Optimized file structure for plugins
+- `figma_get_console_logs` - Debug plugin code
+- `figma_watch_console` - Monitor plugin execution
+
+**For Design System Extraction:**
+- `figma_get_variables` - Design tokens with code exports
+- `figma_get_styles` - Traditional styles with code exports
+- `figma_get_file_data` - Full file structure with verbosity control
+
+**For Debugging:**
+- `figma_get_console_logs` - Retrieve specific logs
+- `figma_watch_console` - Live monitoring
+- `figma_take_screenshot` - Visual debugging
+- `figma_get_status` - Check connection health
+
+---
+
+---
+
+## ✏️ Design Creation Tools
+
+> **⚠️ Requires Desktop Bridge Plugin**: These tools require the Desktop Bridge plugin running in Figma. In Local Mode, the plugin connects via WebSocket. In Cloud Mode, pair first using `figma_pair_plugin` to connect through the cloud relay.
+
+### `figma_execute`
+
+**The Power Tool** - Execute any Figma Plugin API code to create designs, modify elements, or perform complex operations.
+
+**When to Use:**
+- Creating UI components (buttons, cards, modals, notifications)
+- Building frames with auto-layout
+- Adding text with specific fonts and styles
+- Creating shapes (rectangles, ellipses, vectors)
+- Applying effects, fills, and strokes
+- Creating pages or organizing layers
+- Any operation that requires the full Figma Plugin API
+
+**Usage:**
+```javascript
+figma_execute({
+  code: `
+    // Create a button component
+    const button = figma.createFrame();
+    button.name = "Button";
+    button.resize(120, 40);
+    button.cornerRadius = 8;
+    button.fills = [{ type: 'SOLID', color: { r: 0.23, g: 0.51, b: 0.96 } }];
+
+    // Add auto-layout
+    button.layoutMode = "HORIZONTAL";
+    button.primaryAxisAlignItems = "CENTER";
+    button.counterAxisAlignItems = "CENTER";
+
+    // Add text
+    await figma.loadFontAsync({ family: "Inter", style: "Medium" });
+    const text = figma.createText();
+    text.characters = "Click me";
+    text.fontName = { family: "Inter", style: "Medium" };
+    text.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+    button.appendChild(text);
+
+    // Position and select
+    button.x = figma.viewport.center.x;
+    button.y = figma.viewport.center.y;
+    figma.currentPage.selection = [button];
+
+    return { nodeId: button.id, name: button.name };
+  `,
+  timeout: 10000  // Optional: max execution time in ms (default: 5000)
+})
+```
+
+**Parameters:**
+- `code` (required): JavaScript code to execute. Has access to `figma` global object.
+- `timeout` (optional): Execution timeout in ms (default: 5000, max: 30000)
+- `fileKey` (optional, **Local Mode only**): Run against a specific connected file instead of the active one, without changing the active file or releasing target lock. Get connected fileKeys from `figma_list_open_files`. Cloud Mode pairs with a single plugin instance and rejects this parameter rather than silently running against the paired file.
+
+**Returns:**
+- Whatever the code returns (use `return` statement)
+- Execution success/failure status
+- `fileContext` — the file name and key **as reported by the plugin that ran the code**, so you can confirm it executed where you intended
+
+**Best Practices:**
+1. **Always use `await` for async operations** (loadFontAsync, getNodeByIdAsync)
+2. **Return useful data** (node IDs, names) for follow-up operations
+3. **Position elements** relative to viewport center for visibility
+4. **Select created elements** so users can see them immediately
+5. **Use try/catch** for error handling in complex operations
+
+**Common Patterns:**
+
+```javascript
+// Create a page
+const page = figma.createPage();
+page.name = "My New Page";
+await figma.setCurrentPageAsync(page);
+
+// Find and modify existing node
+const node = await figma.getNodeByIdAsync("123:456");
+node.name = "New Name";
+
+// Create component from frame
+const component = figma.createComponent();
+// ... add children
+
+// Apply auto-layout
+frame.layoutMode = "VERTICAL";
+frame.itemSpacing = 8;
+frame.paddingTop = 16;
+frame.paddingBottom = 16;
+frame.paddingLeft = 16;
+frame.paddingRight = 16;
+```
+
+---
+
+### `figma_execute_across_files`
+
+**Local Mode only.** Run the same code in several connected files at once, concurrently. Built for cross-file work on a multi-file design system — auditing every file for the same problem, or applying the same fix to a set of them — instead of switching the active file and running `figma_execute` once per file.
+
+Each file's code runs in that file's own plugin context, so one file's failure or timeout doesn't affect the others. Results come back as a per-file map.
+
+**When to Use:**
+- Checking the same thing across a library split over multiple files ("which files still use the old text styles?")
+- Applying one mechanical fix across a known set of files
+- Any read that you'd otherwise repeat file by file
+
+**Usage:**
+```javascript
+// Preferred: name the files you mean.
+figma_execute_across_files({
+  fileKeys: ["abc123", "def456"],     // from figma_list_open_files
+  code: `
+    const detached = figma.currentPage.findAll(n => n.type === "INSTANCE" && !n.mainComponent);
+    return { detachedCount: detached.length };
+  `,
+  timeout: 10000
+})
+
+// Every connected file — opt in explicitly.
+figma_execute_across_files({
+  allFiles: true,
+  code: `return { pageCount: figma.root.children.length };`
+})
+```
+
+**Parameters:**
+- `code` (required): JavaScript to run in each targeted file. Same `figma` global as `figma_execute`.
+- `fileKeys` (optional): Which connected files to target. Get them from `figma_list_open_files`.
+- `allFiles` (optional, default `false`): Target every connected file.
+- `timeout` (optional): Per-file timeout in ms (default: 10000, max: 30000). Applied independently per file — one unresponsive file doesn't delay the rest.
+
+**You must pass either `fileKeys` or `allFiles: true`.** The tool refuses to run otherwise. This is deliberate: `allFiles` executes your code in files you may be actively editing, including one pinned by target lock, so hitting everything is a decision rather than what happens when you leave a parameter out. Name the files explicitly for anything that writes.
+
+**Returns:**
+```json
+{
+  "results": {
+    "abc123": {
+      "fileName": "Design System — Core",
+      "success": true,
+      "result": { "detachedCount": 3 },
+      "fileContext": { "fileName": "Design System — Core", "fileKey": "abc123" }
+    },
+    "def456": {
+      "fileName": "Design System — Icons",
+      "success": false,
+      "error": "WebSocket command EXECUTE_CODE timed out after 10000ms"
+    }
+  },
+  "totalTargeted": 2,
+  "totalSucceeded": 1,
+  "totalFailed": 1,
+  "missingFileKeys": ["ghi789"]
+}
+```
+
+- `fileContext` is reported by the plugin that actually ran the code — use it to confirm each result came from the file you addressed.
+- `missingFileKeys` lists requested files that aren't currently connected; the rest still run.
+- The response is only marked as an error if *every* targeted file failed.
+
+**Requires** the Desktop Bridge plugin open in each target file. Cloud Mode pairs with exactly one plugin instance, so this tool isn't available there.
+
+---
+
+## 🔧 Variable Management Tools
+
+> **⚠️ Requires Desktop Bridge Plugin**: These tools require the Desktop Bridge plugin running in Figma. In Local Mode, the plugin connects via WebSocket. In Cloud Mode, pair first using `figma_pair_plugin` to connect through the cloud relay.
+
+### `figma_create_variable_collection`
+
+Create a new variable collection with optional modes.
+
+**When to Use:**
+- Setting up a new design system
+- Creating themed variable sets (colors, spacing, typography)
+- Organizing variables into logical groups
+
+**Usage:**
+```javascript
+figma_create_variable_collection({
+  name: "Brand Colors",
+  initialModeName: "Light",        // Optional: rename default mode
+  additionalModes: ["Dark", "High Contrast"]  // Optional: add more modes
+})
+```
+
+**Parameters:**
+- `name` (required): Collection name
+- `initialModeName` (optional): Name for the default mode (otherwise "Mode 1")
+- `additionalModes` (optional): Array of additional mode names to create
+
+**Returns:**
+- Created collection with ID, name, modes, and mode IDs
+
+---
+
+### `figma_create_variable`
+
+Create a new variable in a collection.
+
+**When to Use:**
+- Adding design tokens to your system
+- Creating colors, spacing values, text strings, or boolean flags
+- Setting up multi-mode variable values
+
+**Usage:**
+```javascript
+figma_create_variable({
+  name: "colors/primary/500",
+  collectionId: "VariableCollectionId:123:456",
+  resolvedType: "COLOR",
+  valuesByMode: {
+    "1:0": "#3B82F6",    // Light mode
+    "1:1": "#60A5FA"     // Dark mode
+  },
+  description: "Primary brand color",  // Optional
+  scopes: ["ALL_FILLS"]                 // Optional
+})
+```
+
+**Parameters:**
+- `name` (required): Variable name (use `/` for grouping)
+- `collectionId` (required): Target collection ID
+- `resolvedType` (required): `"COLOR"`, `"FLOAT"`, `"STRING"`, or `"BOOLEAN"`
+- `valuesByMode` (optional): Object mapping mode IDs to values
+- `description` (optional): Variable description
+- `scopes` (optional): Where variable can be applied
+
+**Value Formats:**
+- **COLOR**: Hex string `"#FF0000"` or `"#FF0000FF"` (with alpha)
+- **FLOAT**: Number `16` or `1.5`
+- **STRING**: Text `"Hello World"`
+- **BOOLEAN**: `true` or `false`
+
+---
+
+### `figma_update_variable`
+
+Update a variable's value in a specific mode.
+
+**When to Use:**
+- Changing existing token values
+- Updating theme-specific values
+- Modifying design system tokens
+
+**Usage:**
+```javascript
+figma_update_variable({
+  variableId: "VariableID:123:456",
+  modeId: "1:0",
+  value: "#10B981"  // New color value
+})
+```
+
+**Parameters:**
+- `variableId` (required): Variable ID to update
+- `modeId` (required): Mode ID to update value in
+- `value` (required): New value (format depends on variable type)
+
+---
+
+### `figma_rename_variable`
+
+Rename a variable while preserving all its values.
+
+**When to Use:**
+- Reorganizing variable naming conventions
+- Fixing typos in variable names
+- Moving variables to different groups
+
+**Usage:**
+```javascript
+figma_rename_variable({
+  variableId: "VariableID:123:456",
+  newName: "colors/brand/primary"
+})
+```
+
+**Parameters:**
+- `variableId` (required): Variable ID to rename
+- `newName` (required): New name (can include `/` for grouping)
+
+---
+
+### `figma_delete_variable`
+
+Delete a variable.
+
+**When to Use:**
+- Removing unused tokens
+- Cleaning up design system
+- Removing deprecated variables
+
+**Usage:**
+```javascript
+figma_delete_variable({
+  variableId: "VariableID:123:456"
+})
+```
+
+**⚠️ Warning:** This action cannot be undone programmatically. Use Figma's Undo if needed.
+
+---
+
+### `figma_delete_variable_collection`
+
+Delete a collection and ALL its variables.
+
+**When to Use:**
+- Removing entire token sets
+- Cleaning up unused collections
+- Resetting design system sections
+
+**Usage:**
+```javascript
+figma_delete_variable_collection({
+  collectionId: "VariableCollectionId:123:456"
+})
+```
+
+**⚠️ Warning:** This deletes ALL variables in the collection. Cannot be undone programmatically.
+
+---
+
+### `figma_add_mode`
+
+Add a new mode to an existing collection.
+
+**When to Use:**
+- Adding theme variants (Dark mode, High Contrast)
+- Adding responsive breakpoints (Mobile, Tablet, Desktop)
+- Adding brand variants
+
+**Usage:**
+```javascript
+figma_add_mode({
+  collectionId: "VariableCollectionId:123:456",
+  modeName: "Dark"
+})
+```
+
+**Parameters:**
+- `collectionId` (required): Collection to add mode to
+- `modeName` (required): Name for the new mode
+
+**Returns:**
+- Updated collection with new mode ID
+
+**Note:** Figma has limits on the number of modes per collection (varies by plan).
+
+---
+
+### `figma_rename_mode`
+
+Rename an existing mode in a collection.
+
+**When to Use:**
+- Fixing mode names
+- Updating naming conventions
+- Making mode names more descriptive
+
+**Usage:**
+```javascript
+figma_rename_mode({
+  collectionId: "VariableCollectionId:123:456",
+  modeId: "1:0",
+  newName: "Light Theme"
+})
+```
+
+**Parameters:**
+- `collectionId` (required): Collection containing the mode
+- `modeId` (required): Mode ID to rename
+- `newName` (required): New name for the mode
+
+---
+
+### `figma_batch_create_variables`
+
+Create multiple variables in a single operation — up to 50x faster than calling `figma_create_variable` repeatedly.
+
+**When to Use:**
+- Creating multiple design tokens at once (e.g., a full color palette)
+- Importing variables from an external source
+- Any time you need to create more than 2-3 variables
+
+**Usage:**
+```javascript
+figma_batch_create_variables({
+  collectionId: "VariableCollectionId:123:456",
+  variables: [
+    {
+      name: "colors/primary/500",
+      resolvedType: "COLOR",
+      description: "Primary brand color",
+      valuesByMode: { "1:0": "#3B82F6", "1:1": "#60A5FA" }
+    },
+    {
+      name: "colors/primary/600",
+      resolvedType: "COLOR",
+      valuesByMode: { "1:0": "#2563EB", "1:1": "#3B82F6" }
+    },
+    {
+      name: "spacing/md",
+      resolvedType: "FLOAT",
+      valuesByMode: { "1:0": 16 }
+    }
+  ]
+})
+```
+
+**Parameters:**
+- `collectionId` (required): Collection ID to create all variables in
+- `variables` (required): Array of 1-100 variable definitions, each with:
+  - `name` (required): Variable name (use `/` for grouping)
+  - `resolvedType` (required): `"COLOR"`, `"FLOAT"`, `"STRING"`, or `"BOOLEAN"`
+  - `description` (optional): Variable description
+  - `valuesByMode` (optional): Object mapping mode IDs to values
+
+**Returns:**
+```json
+{
+  "success": true,
+  "message": "Batch created 3 variables (0 failed)",
+  "created": 3,
+  "failed": 0,
+  "results": [
+    { "success": true, "name": "colors/primary/500", "id": "VariableID:1:1" },
+    { "success": true, "name": "colors/primary/600", "id": "VariableID:1:2" },
+    { "success": true, "name": "spacing/md", "id": "VariableID:1:3" }
+  ]
+}
+```
+
+**Performance:** Executes in a single Plugin API roundtrip. 10-50x faster than individual calls for bulk operations.
+
+---
+
+### `figma_batch_update_variables`
+
+Update multiple variable values in a single operation — up to 50x faster than calling `figma_update_variable` repeatedly.
+
+**When to Use:**
+- Updating many token values at once (e.g., theme refresh)
+- Syncing variable values from an external source
+- Any time you need to update more than 2-3 variables
+
+**Usage:**
+```javascript
+figma_batch_update_variables({
+  updates: [
+    { variableId: "VariableID:1:1", modeId: "1:0", value: "#2563EB" },
+    { variableId: "VariableID:1:2", modeId: "1:0", value: "#1D4ED8" },
+    { variableId: "VariableID:1:3", modeId: "1:0", value: 20 }
+  ]
+})
+```
+
+**Parameters:**
+- `updates` (required): Array of 1-100 updates, each with:
+  - `variableId` (required): Variable ID to update
+  - `modeId` (required): Mode ID to update value in
+  - `value` (required): New value (COLOR: hex `"#FF0000"`, FLOAT: number, STRING: text, BOOLEAN: true/false)
+
+**Returns:**
+```json
+{
+  "success": true,
+  "message": "Batch updated 3 variables (0 failed)",
+  "updated": 3,
+  "failed": 0,
+  "results": [
+    { "success": true, "variableId": "VariableID:1:1", "name": "colors/primary/500" },
+    { "success": true, "variableId": "VariableID:1:2", "name": "colors/primary/600" },
+    { "success": true, "variableId": "VariableID:1:3", "name": "spacing/md" }
+  ]
+}
+```
+
+**Performance:** Executes in a single Plugin API roundtrip. 10-50x faster than individual calls for bulk updates.
+
+---
+
+### `figma_setup_design_tokens`
+
+Create a complete design token structure in one atomic operation: collection, modes, and all variables.
+
+**When to Use:**
+- Setting up a new design system from scratch
+- Importing CSS custom properties or design tokens into Figma
+- Creating themed token sets (Light/Dark) with all values at once
+- Bootstrapping a new project with a full token foundation
+
+**Usage:**
+```javascript
+figma_setup_design_tokens({
+  collectionName: "Brand Tokens",
+  modes: ["Light", "Dark"],
+  tokens: [
+    {
+      name: "color/background",
+      resolvedType: "COLOR",
+      description: "Page background",
+      values: { "Light": "#FFFFFF", "Dark": "#1A1A2E" }
+    },
+    {
+      name: "color/text",
+      resolvedType: "COLOR",
+      values: { "Light": "#111827", "Dark": "#F9FAFB" }
+    },
+    {
+      name: "spacing/page",
+      resolvedType: "FLOAT",
+      values: { "Light": 24, "Dark": 24 }
+    },
+    {
+      name: "color/action/primary",
+      resolvedType: "COLOR",
+      // Alias values: DTCG brace references resolve to real variable aliases
+      values: { "Light": "{color.background}", "Dark": "{color.background}" }
+    }
+  ]
+})
+```
+
+**Parameters:**
+- `collectionName` (required): Name for the new collection
+- `modes` (required): Array of 1-4 mode names (first becomes default)
+- `tokens` (required): Array of 1-100 token definitions, each with:
+  - `name` (required): Token name (use `/` for grouping)
+  - `resolvedType` (required): `"COLOR"`, `"FLOAT"`, `"STRING"`, or `"BOOLEAN"`
+  - `description` (optional): Token description
+  - `values` (required): Object mapping **mode names** (not IDs) to values. A value can be a literal **or a DTCG brace reference** (`"{color.blue.600}"`, set-qualified forms like `"{primitives.color.blue.600}"` too) — resolved via `createVariableAlias` against both variables created in the same call and variables that already exist in the file.
+
+**Alias resolution:** creation runs in two passes — all variables are created first, then values are applied — so **forward references within one call resolve** (a semantic token can reference a primitive defined later in the same `tokens` array). Unresolvable references warn per-item without failing the batch. Semantic collections no longer require raw `figma_execute` scripting.
+
+**Returns:**
+```json
+{
+  "success": true,
+  "message": "Created collection 'Brand Tokens' with 2 modes and 3 tokens (0 failed)",
+  "collectionId": "VariableCollectionId:1:1",
+  "collectionName": "Brand Tokens",
+  "modes": { "Light": "1:0", "Dark": "1:1" },
+  "created": 3,
+  "failed": 0,
+  "results": [
+    { "success": true, "name": "color/background", "id": "VariableID:1:1" },
+    { "success": true, "name": "color/text", "id": "VariableID:1:2" },
+    { "success": true, "name": "spacing/page", "id": "VariableID:1:3" }
+  ]
+}
+```
+
+**Key Difference from Other Tools:** Values are keyed by **mode name** (e.g., `"Light"`, `"Dark"`) instead of mode ID — the tool resolves names to IDs internally.
+
+**Performance:** Creates everything in a single Plugin API roundtrip. Ideal for bootstrapping entire token systems.
+
+---
+
+## 🧩 Component Tools
+
+> **⚠️ Requires Desktop Bridge Plugin**: These tools require the Desktop Bridge plugin running in Figma. In Local Mode, the plugin connects via WebSocket. In Cloud Mode, pair first using `figma_pair_plugin` to connect through the cloud relay.
+
+### `figma_search_components`
+
+Search for components by name or description. Supports both local file search and cross-file published library search.
+
+**When to Use:**
+- Finding existing components to instantiate
+- Discovering available UI building blocks
+- Searching a published design system library from another file
+- Checking if a component already exists before creating
+
+**Usage:**
+```javascript
+// Search local file (existing behavior)
+figma_search_components({
+  query: "Button"
+})
+
+// Search a published library by file key
+figma_search_components({
+  query: "Button",
+  libraryFileKey: "abc123XYZ"
+})
+
+// Search a published library by URL
+figma_search_components({
+  query: "Card",
+  libraryFileUrl: "https://www.figma.com/design/abc123/My-Design-System"
+})
+```
+
+**Parameters:**
+- `query` (optional): Search term to match against component names or descriptions
+- `category` (optional): Filter by category
+- `libraryFileKey` (optional): File key of a published library for cross-file search
+- `libraryFileUrl` (optional): URL of a published library file (alternative to libraryFileKey)
+- `limit` (optional): Max results (default: 10, max: 25)
+- `offset` (optional): Pagination offset
+
+**Returns:**
+- Array of matching components with keys, names, variant info, and `source` ("local" or "library")
+
+**Note:** Library search requires `FIGMA_ACCESS_TOKEN` environment variable.
+
+---
+
+### `figma_get_library_components`
+
+Discover published components from a shared/team library file. This is the primary tool for cross-file design system workflows.
+
+**When to Use:**
+- Browsing all components in a published design system
+- Getting component keys for instantiation from another file
+- Auditing a library's component inventory with variant detail
+
+**Usage:**
+```javascript
+// By file key
+figma_get_library_components({
+  libraryFileKey: "abc123XYZ",
+  query: "Button"
+})
+
+// By URL with full variant detail
+figma_get_library_components({
+  libraryFileUrl: "https://www.figma.com/design/abc123/My-Design-System",
+  includeVariants: true,
+  limit: 50
+})
+```
+
+**Parameters:**
+- `libraryFileUrl` (optional): URL of the library file
+- `libraryFileKey` (optional): File key of the library file
+- `query` (optional): Filter by component name or description
+- `limit` (optional): Max results (default: 25, max: 100)
+- `offset` (optional): Pagination offset
+- `includeVariants` (optional): Include individual variant components (default: false)
+
+**Returns:**
+- Component sets with variant counts and keys, standalone components, summary stats, and instantiation examples
+
+**Workflow:**
+1. Call `figma_get_library_components` with your design system file
+2. Find the component you want and note its `key`
+3. Call `figma_instantiate_component` with that `componentKey` — the component is imported from the published library automatically
+
+**Note:** Requires `FIGMA_ACCESS_TOKEN` environment variable. Local mode only.
+
+---
+
+### `figma_get_library_component_by_key`
+
+Resolve a single library component to its full property definitions, variants, and visual specs — using **only the component key**, with no need to first find the source library file's URL.
+
+This is the missing link between "I see a component key in search results" (from `figma_search_components`, `figma_get_library_components`, or the official Figma MCP's `search_design_system`) and "I'm ready to instantiate a specific variant."
+
+**When to Use:**
+- You have a component key (40-char hex) from any search tool and want to inspect what properties / variants it exposes before instantiating
+- You need each variant's published key so `figma_instantiate_component` can target a specific one
+- You want per-variant visual specs (fills, strokes, padding, typography) for code-generation fidelity
+
+**How It Works:**
+1. Tries Figma REST `/v1/component_sets/{key}` first (most common case — buttons, inputs, anything with variants)
+2. On 404, falls back to `/v1/components/{key}` (standalone components)
+3. Extracts `file_key` + `node_id` from the response
+4. Fetches the node at `depth=2` to read `componentPropertyDefinitions` and the variant subtree
+5. For COMPONENT_SETs, also fetches the source file's `/components` list **in parallel** so each variant child node can be mapped to its published variant key
+
+**Usage:**
+```javascript
+// Resolve a component set by key
+figma_get_library_component_by_key({
+  componentKey: "806826503bbd2ab15d0ff77d076a9406a5a83197"
+})
+
+// Summary mode — properties and variant names only (no visual specs)
+figma_get_library_component_by_key({
+  componentKey: "806826503bbd2ab15d0ff77d076a9406a5a83197",
+  format: "summary"
+})
+
+// Skip visual specs entirely (faster, smaller response)
+figma_get_library_component_by_key({
+  componentKey: "806826503bbd2ab15d0ff77d076a9406a5a83197",
+  includeVisualSpecs: false
+})
+```
+
+**Parameters:**
+- `componentKey` (required): The 40-char hex component key from search results. Works for both COMPONENT_SET and standalone COMPONENT keys.
+- `includeVisualSpecs` (optional, default `true`): Include per-variant fills/strokes/padding/typography. Auto-stripped if the response would exceed 500KB.
+- `format` (optional, `"full"` | `"summary"`, default `"full"`): `summary` omits per-variant visual specs. Auto-downgrades on large responses.
+
+**Returns:**
+- `resolvedAs`: `"COMPONENT_SET"` or `"COMPONENT"`
+- `fileKey` + `nodeId`: source file + node id
+- `name`, `description`, `thumbnail_url`, `containing_frame`, `user`, `created_at`, `updated_at`
+- `properties`: `componentPropertyDefinitions` (VARIANT / BOOLEAN / TEXT / INSTANCE_SWAP)
+- `variants[]`: each with `name`, `nodeId`, `key` (the value to pass to `figma_instantiate_component`), and optional `visualSpec`
+- `visualSpec`: root-level fills/strokes/effects/padding/typography
+- `bounds`: width × height of the component set
+- `compression` (only when stripped): `{ originalSizeKB, finalSizeKB, strippedVisualSpecs: true }`
+- `warnings[]`: non-fatal issues (e.g. variant-key resolution skipped)
+
+**Plan requirements:** Works on **all Figma plans**. Requires `FIGMA_ACCESS_TOKEN` with `library_assets:read` + `files:read` scopes.
+
+---
+
+### `figma_get_library_variables`
+
+List every variable from team libraries the current file has subscribed. Uses the **Plugin API path** (`figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync()` + `getVariablesInLibraryCollectionAsync()`), which works on every Figma plan — unlike the REST `/v1/files/{key}/variables/local` endpoint which is Enterprise-only.
+
+**When to Use:**
+- Inventory what design tokens (colors, spacing, typography sizes) are available from your subscribed libraries
+- Find the `key` of a specific library variable so you can import it
+- Build a design system overview that includes shared tokens (not just file-local ones)
+
+**Usage:**
+```javascript
+// Everything subscribed
+figma_get_library_variables()
+
+// Filter by library name (case-insensitive substring)
+figma_get_library_variables({ libraryName: "Northright" })
+
+// Filter to only color tokens from a specific collection
+figma_get_library_variables({
+  libraryName: "Altitude",
+  collectionName: "Colors",
+  resolvedType: "COLOR"
+})
+```
+
+**Parameters:**
+- `libraryName` (optional): Case-insensitive substring filter on the source library's name
+- `collectionName` (optional): Case-insensitive substring filter on the collection name within a library
+- `resolvedType` (optional, `"COLOR" | "FLOAT" | "STRING" | "BOOLEAN"`): Filter to a single token type. Auto-prunes empty collections after filtering.
+
+**Returns:**
+- `summary`: `{ totalCollections, totalVariables }`
+- `filters`: echoed back so you can verify
+- `collections[]`: `[{ libraryName, collectionKey, collectionName, variableCount, variables: [{ key, name, resolvedType }] }]`
+
+**Plan requirements:** Works on **all Figma plans**. Requires the Desktop Bridge plugin to be running. Only libraries the user has explicitly enabled in the current file appear (subscribing libraries is UI-only — the Plugin API cannot subscribe libraries for you).
+
+---
+
+### `figma_import_library_variable`
+
+Import a single variable from a subscribed library into the current file. After import, the variable becomes locally addressable by its returned `id` and can be passed to any tool that binds variables to nodes (`figma_set_fills`, `figma_update_variable`, etc.). Idempotent — calling twice returns the same local id.
+
+**When to Use:**
+- After `figma_get_library_variables`, you've picked a token and want to use it in the current file
+- You're building a composition that mixes file-local variables with library tokens
+
+**Usage:**
+```javascript
+// Step 1: find the variable
+const list = await figma_get_library_variables({
+  libraryName: "Northright",
+  resolvedType: "COLOR"
+});
+
+// Step 2: import it
+const result = await figma_import_library_variable({
+  variableKey: list.collections[0].variables[0].key
+});
+
+// Step 3: use the returned id to bind it to a node
+await figma_set_fills({
+  nodeId: "...",
+  fills: [{ type: "SOLID", boundVariables: { color: { type: "VARIABLE_ALIAS", id: result.imported.id } } }]
+});
+```
+
+**Parameters:**
+- `variableKey` (required): The variable's library key from `figma_get_library_variables` (the `collections[].variables[].key` field — distinct from the local `id` you'll get back).
+
+**Returns:**
+- `imported`: `{ id, key, name, resolvedType, description, variableCollectionId, remote }`
+- `usage.bind`: a hint string showing how to use the returned `id` with binding tools
+
+**Errors:**
+- If the source library isn't subscribed by the current file, returns a specific hint pointing to **Figma > Assets panel > Libraries**. The Plugin API rejects with a generic message; this tool detects the pattern and explains it.
+
+**Plan requirements:** Works on **all Figma plans**. Requires the Desktop Bridge plugin.
+
+---
+
+### `figma_get_component_details`
+
+Get detailed information about a specific component.
+
+**Usage:**
+```javascript
+figma_get_component_details({
+  componentKey: "abc123def456"  // Component key from search results
+})
+```
+
+**Parameters:**
+- `componentKey` (required): The component's key identifier
+
+**Returns:**
+- Full component details including properties, variants, and metadata
+
+---
+
+### `figma_instantiate_component`
+
+Create an instance of a component on the canvas.
+
+**When to Use:**
+- Adding existing components to your design
+- Building compositions from component library
+- Creating layouts using design system components
+
+**Usage:**
+```javascript
+figma_instantiate_component({
+  componentKey: "abc123def456",
+  x: 100,                        // X position
+  y: 200,                        // Y position
+  overrides: {                   // Property overrides
+    "Button Label": "Click Me",
+    "Show Icon": true
+  }
+})
+```
+
+**Parameters:**
+- `componentKey` (required): Component key to instantiate
+- `x` (optional): X position on canvas
+- `y` (optional): Y position on canvas
+- `overrides` (optional): Property overrides for the instance
+
+**Returns:**
+- Created instance with node ID
+
+---
+
+### `figma_create_component_set`
+
+Create a component set with variants in one declarative call — replaces hand-written `figma_execute` + `figma.combineAsVariants()` scripts.
+
+**When to Use:**
+- Building a component's full variant matrix (states × sizes × …) from a single base component
+- Combining existing loose components into a proper component set
+- Any time you'd otherwise script `combineAsVariants` by hand
+
+**Two modes:**
+
+1. **Generate from a base component** — pass `baseComponentId` + `properties` (the variant axes matrix). The base is cloned for every combination of the axes, each variant named `Prop=Value` comma-joined (e.g. `State=hover, Size=sm`), then combined into a set. The base component itself becomes the **first variant** (same node ID), so existing instances of the base survive as instances of that variant.
+2. **Combine existing components** — pass `componentIds`, optionally with `variantProperties` (aligned 1:1 by index) to rename each component to `Prop=Value` form before combining. Property names and values must not contain `=` or `,`. On any pre-combine failure, a unified rollback restores the components' original names.
+
+**Usage (axes matrix):**
+```javascript
+figma_create_component_set({
+  baseComponentId: "123:456",
+  properties: {
+    State: ["default", "hover", "disabled"],
+    Size: ["sm", "lg"]
+  },                              // → 6 variants: State=default, Size=sm … State=disabled, Size=lg
+  name: "Button",
+  autoArrange: true               // labeled grid inside a white container
+})
+```
+
+**Usage (combine existing components):**
+```javascript
+figma_create_component_set({
+  componentIds: ["123:1", "123:2", "123:3"],
+  variantProperties: [
+    { State: "default" },
+    { State: "hover" },
+    { State: "disabled" }
+  ],
+  name: "Button"
+})
+```
+
+**Parameters:**
+- `baseComponentId` (optional): Node ID of an existing COMPONENT to use as the base. Mutually exclusive with `componentIds`.
+- `properties` (required with `baseComponentId`): Variant property axes — `{ State: ["default", "hover"], Size: ["sm", "lg"] }`. Max 100 combinations.
+- `componentIds` (optional): Node IDs of existing COMPONENT nodes to combine. Components already inside a component set are rejected.
+- `variantProperties` (optional, only with `componentIds`): One property map per component, aligned by index. Without it, existing names are kept (names lacking `=` become `Property 1=<name>`).
+- `name` (optional): Name for the component set (defaults to Figma's derived name)
+- `parentId` (optional): Container frame/section to create the set in (defaults to current page)
+- `position` (optional): `{ x, y }` position within the parent
+- `autoArrange` (optional, default `false`): Lay the new set out as a labeled grid (columns = last property, rows = other properties) inside a white container — same in-place layout as `figma_arrange_component_set`
+- `arrangeOptions` (optional): `gap`, `cellPadding`, `columnProperty` — used when `autoArrange` is true
+
+**Naming convention:** Figma derives the variant property definitions from the `Prop=Value` names; they live on the **SET** (`componentPropertyDefinitions`), not on individual variants.
+
+**Size guidance:** hard cap **100 variants**. The timeout auto-scales with variant count (~1.2s/variant, 30s floor / 2min cap) at every hop, but above **~40 variants** the single-pass clone+combine gets slow and the response carries a warning — prefer splitting large matrices into multiple sets (e.g. one set per Size).
+
+**Returns:**
+- The component set's `id`, `name`, and key
+- Each variant's `name`, `nodeId`, and **`key`** — instantiate with a *variant's* key via `figma_instantiate_component`, not the set's key
+
+---
+
+### `figma_arrange_component_set`
+
+Organize component variants into a professional component set with labels and proper structure.
+
+**When to Use:**
+- After creating multiple component variants
+- Organizing messy component sets
+- Adding row/column labels to variant grids
+- Getting the purple dashed border Figma styling
+
+**Usage:**
+```javascript
+figma_arrange_component_set({
+  componentSetId: "123:456",     // Component set to arrange
+  options: {
+    gap: 24,                     // Gap between cells
+    cellPadding: 20,             // Padding inside cells
+    columnProperty: "State"      // Property to use for columns
+  }
+})
+```
+
+**Parameters:**
+- `componentSetId` (optional): ID of component set to arrange (uses selection if not provided)
+- `componentSetName` (optional): Find component set by name
+- `options` (optional): Layout options
+  - `gap`: Gap between grid cells (default: 24)
+  - `cellPadding`: Padding inside each cell (default: 20)
+  - `columnProperty`: Property to use for columns (default: auto-detect, usually "State")
+
+**Returns:**
+- Arranged component set with:
+  - White container frame with title
+  - Row labels (vertically centered)
+  - Column headers (horizontally centered)
+  - Purple dashed border (Figma's native styling)
+
+**Example Result:**
+```
+┌─────────────────────────────────────────┐
+│  Button                                 │
+│         Default  Hover  Pressed  Disabled
+│  ┌─────────────────────────────────────┐
+│  │ Primary/Small  [btn] [btn] [btn] [btn]
+│  │ Primary/Medium [btn] [btn] [btn] [btn]
+│  │ Primary/Large  [btn] [btn] [btn] [btn]
+│  │ Secondary/...  [btn] [btn] [btn] [btn]
+│  └─────────────────────────────────────┘
+└─────────────────────────────────────────┘
+```
+
+---
+
+### `figma_create_slot`
+
+Add a Figma Slot to a component via the GA `createSlot()` API. The linked SLOT component property is created automatically and named after the slot — renaming the slot later renames the property.
+
+**Mode:** Local / Cloud (requires Desktop Bridge)
+
+```javascript
+figma_create_slot({
+  nodeId: "123:456",        // COMPONENT node (standalone OR a variant inside a set)
+  name: "Content",          // optional slot layer name
+  width: 320, height: 140,  // optional initial size (each independent)
+  layoutMode: "VERTICAL"    // optional: NONE | HORIZONTAL | VERTICAL (GRID rejected by Figma)
+})
+// → { success, slot: { id, name, propertyKey, width, height, layoutMode } }
+```
+
+For a COMPONENT_SET, call once per variant component — each variant gets its own SlotNode pointing at a shared property.
+
+### `figma_get_slots`
+
+List slots on a COMPONENT, COMPONENT_SET (aggregated across variants, each tagged with `variantId`/`variantName`), or INSTANCE. Returns ids, names, property keys, dimensions, layout mode, and current children. Use on an instance before `figma_append_to_slot` to discover slot names.
+
+**Mode:** Local / Cloud (requires Desktop Bridge)
+
+### `figma_append_to_slot`
+
+Populate a slot on a component instance. Slot content **cannot** be set through `figma_set_instance_properties` — Figma rejects slot values there by design; this tool is the population path.
+
+**Mode:** Local / Cloud (requires Desktop Bridge)
+
+```javascript
+// Clone an existing node into the slot
+figma_append_to_slot({
+  instanceId: "123:789", slotName: "Content",  // or slotId directly
+  sourceNodeId: "123:111",                     // node to clone (clone: false moves it)
+  clearExisting: true                           // optional: replace current content
+})
+
+// Or create new content in place
+figma_append_to_slot({
+  instanceId: "123:789", slotName: "Content",
+  nodeType: "TEXT",                            // FRAME | RECTANGLE | ELLIPSE | TEXT | LINE | POLYGON | STAR | VECTOR
+  properties: { text: "Hello", name: "Label", width: 200, height: 24 }
+})
+```
+
+Notes: main components can't be appended (clone an instance instead); in NONE-layout slots, clones snap to the slot origin so they stay visible; `clearExisting` only clears after the new content validates.
+
+### `figma_reset_slot`
+
+Clear all content from a slot on an instance. Takes `slotId` or `instanceId` + `slotName`.
+
+**Mode:** Local / Cloud (requires Desktop Bridge)
+
+### `figma_add_slot_property`
+
+Retrofit an existing frame as a slot: adds a SLOT component property and binds the frame to it via `componentPropertyReferences.slotContentId`. Prefer `figma_create_slot` for new slots. Supports `description` and `preferredValues` (the components the slot should accept). Works on standalone components and on component sets (bind a frame inside any variant). Existing property references on the frame are preserved.
+
+**Mode:** Local / Cloud (requires Desktop Bridge)
+
+---
+
+### `figma_set_description`
+
+Add or update a description on a component, component set, or style.
+
+**When to Use:**
+- Documenting components for developers
+- Adding usage guidelines
+- Writing design system documentation
+
+**Usage:**
+```javascript
+figma_set_description({
+  nodeId: "123:456",
+  description: "Primary action button. Use for main CTAs.\n\n**Variants:**\n- Size: Small, Medium, Large\n- State: Default, Hover, Pressed, Disabled"
+})
+```
+
+**Parameters:**
+- `nodeId` (required): Node ID of component/style to document
+- `description` (required): Description text (supports markdown)
+
+**Returns:**
+- Confirmation with updated node info
+
+**Note:** Descriptions appear in Figma's Dev Mode for developers.
+
+---
+
+## 🔧 Node Manipulation Tools
+
+### `figma_resize_node`
+
+Resize a node to specific dimensions.
+
+**Usage:**
+```javascript
+figma_resize_node({
+  nodeId: "123:456",
+  width: 200,
+  height: 100
+})
+```
+
+---
+
+### `figma_move_node`
+
+Move a node to a specific position.
+
+**Usage:**
+```javascript
+figma_move_node({
+  nodeId: "123:456",
+  x: 100,
+  y: 200
+})
+```
+
+---
+
+### `figma_clone_node`
+
+Create a copy of a node.
+
+**Usage:**
+```javascript
+figma_clone_node({
+  nodeId: "123:456"
+})
+```
+
+**Returns:**
+- New node ID of the clone
+
+---
+
+### `figma_delete_node`
+
+Delete a node from the canvas.
+
+**Usage:**
+```javascript
+figma_delete_node({
+  nodeId: "123:456"
+})
+```
+
+**⚠️ Warning:** This cannot be undone programmatically.
+
+---
+
+### `figma_rename_node`
+
+Rename a node.
+
+**Usage:**
+```javascript
+figma_rename_node({
+  nodeId: "123:456",
+  newName: "Header Section"
+})
+```
+
+---
+
+### `figma_set_text`
+
+Set the text content of a text node.
+
+**Usage:**
+```javascript
+figma_set_text({
+  nodeId: "123:456",
+  characters: "Hello World"
+})
+```
+
+---
+
+### `figma_set_fills`
+
+Set the fill colors of a node.
+
+**Usage:**
+```javascript
+figma_set_fills({
+  nodeId: "123:456",
+  fills: [{ type: "SOLID", color: "#FF0000" }]
+})
+```
+
+---
+
+### `figma_set_strokes`
+
+Set the stroke colors of a node.
+
+**Usage:**
+```javascript
+figma_set_strokes({
+  nodeId: "123:456",
+  strokes: [{ type: "SOLID", color: "#000000" }],
+  strokeWeight: 2
+})
+```
+
+---
+
+### `figma_create_child`
+
+Create a child node inside a parent.
+
+**Usage:**
+```javascript
+figma_create_child({
+  parentId: "123:456",
+  type: "FRAME",
+  name: "New Frame"
+})
+```
+
+---
+
+## 🏷️ Component Property Tools
+
+### `figma_add_component_property`
+
+Add a new property to a component.
+
+**Usage:**
+```javascript
+figma_add_component_property({
+  nodeId: "123:456",
+  propertyName: "Show Icon",
+  propertyType: "BOOLEAN",
+  defaultValue: true
+})
+```
+
+**Parameters:**
+- `nodeId` (required): Component node ID
+- `propertyName` (required): Name for the new property
+- `propertyType` (required): `"BOOLEAN"`, `"TEXT"`, `"INSTANCE_SWAP"`, or `"VARIANT"`
+- `defaultValue` (required): Default value for the property
+
+---
+
+### `figma_edit_component_property`
+
+Edit an existing component property.
+
+**Usage:**
+```javascript
+figma_edit_component_property({
+  nodeId: "123:456",
+  propertyName: "Label",
+  newValue: {
+    name: "Button Text",
+    defaultValue: "Click me"
+  }
+})
+```
+
+---
+
+### `figma_delete_component_property`
+
+Remove a property from a component.
+
+**Usage:**
+```javascript
+figma_delete_component_property({
+  nodeId: "123:456",
+  propertyName: "Deprecated Prop"
+})
+```
+
+---
+
+## 📦 Design System Kit
+
+### `figma_get_design_system_kit`
+
+Extract your entire design system — tokens, components, and styles — in a single call. This is the **preferred tool** for design system extraction, replacing separate calls to `figma_get_variables`, `figma_get_component`, and `figma_get_styles`.
+
+Returns component visual specs (exact colors, padding, typography, layout), rendered screenshots, token values per mode (light/dark), and resolved style values. Ideal for AI code generation — the `visualSpec` data provides pixel-accurate reproduction data.
+
+**Available in both Local and Remote modes.**
+
+### `figma_audit_design_system_report`
+
+Run a deterministic, Lighthouse-style health audit of the current design system and get the scored report back as data — no UI, no MCP Apps support, no `ENABLE_MCP_APPS` flag required. Same scoring engine as the Design System Dashboard app: **Naming & Semantics, Token Architecture, Component Metadata, Accessibility, Consistency, Coverage** — each 0–100, weighted into an overall score.
+
+```javascript
+// Bounded readable summary (default)
+figma_audit_design_system_report({})
+
+// Chunked drill-down: full findings for ONE category
+figma_audit_design_system_report({ category: "accessibility" })
+
+// Complete scored JSON (examples/locations clamped)
+figma_audit_design_system_report({ format: "full" })
+
+// Re-crawl after editing the file (results cache for ~5 minutes)
+figma_audit_design_system_report({ forceRefresh: true })
+```
+
+**Built for heavy files and small context windows:**
+- Component data is fetched **live-first** through the Desktop Bridge — one page per plugin roundtrip (30s cap each, failures isolated per page) — with the REST published-library endpoints as fallback. The chosen source is disclosed in the report (`bridge-live` / `rest-published` / `none`) because a published snapshot can be stale: scores from different sources are not comparable.
+- The bridge crawl is **fileKey-verified**: if the plugin is connected to a different file than requested, the audit refuses the data and falls back to REST rather than silently scoring the wrong file.
+- Raw audit data caches for 5 minutes, so a summary call plus per-category drill-downs cost **one crawl**.
+- The default summary output stays bounded regardless of file size; use `category` for detail instead of `format: "full"` when working interactively.
+
+**Every finding ends with a remediation verdict** — whether this MCP can fix it (`design`: auto-fixable via write tools like `figma_rename_variable` / `figma_set_description` / `figma_rename_mode`), can fix it after a design decision (`design-assisted`: e.g. contrast hues, alias tiering), or the work needs a human (`manual`: e.g. missing core components). Reports name the exact tools, so the natural next step is asking your agent to apply the fixes.
+
+**Local Mode only** (requires the Desktop Bridge for live data; REST fallback works with a Figma token).
+
+**Usage:**
+```javascript
+// Full design system extraction
+figma_get_design_system_kit({
+  fileKey: "abc123def"
+})
+
+// Only tokens and components, with images
+figma_get_design_system_kit({
+  fileKey: "abc123def",
+  include: ["tokens", "components"],
+  includeImages: true
+})
+
+// Specific components only
+figma_get_design_system_kit({
+  fileKey: "abc123def",
+  include: ["components"],
+  componentIds: ["1:234", "5:678"]
+})
+
+// Compact format for large design systems
+figma_get_design_system_kit({
+  fileKey: "abc123def",
+  format: "compact"
+})
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `fileKey` | string | *(current file)* | Figma file key. If omitted, extracted from the current browser URL. |
+| `include` | array | `["tokens", "components", "styles"]` | Which sections to include. |
+| `componentIds` | array | *(all)* | Specific component node IDs to include. If omitted, all published components are returned. |
+| `includeImages` | boolean | `false` | Include image URLs for components (adds latency). |
+| `format` | `"full"` \| `"summary"` \| `"compact"` | `"full"` | Response detail level. |
+
+**Format options:**
+- **`full`** — Complete data with visual specs and resolved style values. Best for implementing specific components.
+- **`summary`** — Strips variant-level visual specs (medium payload). Good for overview + a few deep-dives.
+- **`compact`** — Only names, types, and property definitions. Best for large design systems or getting an inventory.
+
+**Adaptive compression:** Regardless of format setting, responses are automatically compressed if they exceed safe size limits for the AI context window.
+
+**Returns:**
+- `tokens` — Variables grouped by collection, with full mode support (light/dark/etc.)
+- `components` — Published components with property definitions, variant specs, and visual specs (fills, strokes, effects, corner radius, layout, typography)
+- `styles` — Color, text, and effect styles with resolved values
+- `ai_instruction` — Guidance for the AI on how to use the extracted data
+- `errors` — Any sections that failed to extract (partial results are still returned)
+
+**Example response structure:**
+```json
+{
+  "fileKey": "abc123",
+  "fileName": "My Design System",
+  "generatedAt": "2025-01-15T10:30:00Z",
+  "format": "full",
+  "tokens": {
+    "collections": [{
+      "name": "Colors",
+      "modes": [{ "name": "Light" }, { "name": "Dark" }],
+      "variables": [{
+        "name": "primary",
+        "type": "COLOR",
+        "valuesByMode": {
+          "Light": { "r": 0.26, "g": 0.46, "b": 1 },
+          "Dark": { "r": 0.37, "g": 0.64, "b": 0.98 }
+        }
+      }]
+    }],
+    "summary": { "totalCollections": 3, "totalVariables": 45 }
+  },
+  "components": {
+    "items": [{
+      "name": "Button",
+      "properties": { "variant": { "type": "VARIANT", "values": ["primary", "secondary"] } },
+      "variants": [{ "name": "variant=primary", "id": "1:234" }],
+      "visualSpec": {
+        "fills": [{ "type": "SOLID", "color": "#4375FF" }],
+        "cornerRadius": 8,
+        "layout": { "mode": "HORIZONTAL", "paddingTop": 12, "paddingLeft": 24 }
+      }
+    }],
+    "summary": { "totalComponents": 12, "totalComponentSets": 5 }
+  },
+  "styles": {
+    "items": [{ "name": "Primary/Default", "styleType": "FILL", "resolvedValue": { "fills": [{ "color": "#4375FF" }] } }],
+    "summary": { "totalStyles": 28 }
+  }
+}
+```
+
+---
+
+## 📊 Design System Summary Tools
+
+### `figma_get_design_system_summary`
+
+Get a high-level overview of the design system in the current file.
+
+**Usage:**
+```javascript
+figma_get_design_system_summary()
+```
+
+**Returns:**
+- Component count and categories
+- Variable collections and counts
+- Style summary (colors, text, effects)
+- Page structure overview
+
+---
+
+### `figma_get_token_values`
+
+Get all variable values organized by collection and mode.
+
+**Usage:**
+```javascript
+figma_get_token_values({
+  collectionName: "Brand Colors"  // Optional: filter by collection
+})
+```
+
+**Returns:**
+- Variables organized by collection
+- Values for each mode
+- Variable metadata
+
+---
+
+## AI Decision Guide: Which Tool to Use?
+
+### For Design System Extraction
+
+| Task | Tool |
+|------|------|
+| **Get everything at once** (tokens + components + styles) | `figma_get_design_system_kit` |
+| Get only tokens/variables | `figma_get_design_system_kit` with `include: ["tokens"]` |
+| Get only components with visual specs | `figma_get_design_system_kit` with `include: ["components"]` |
+| Get variables with multi-format export (CSS, Tailwind, Sass) | `figma_get_variables` |
+| Get a quick overview (counts, categories) | `figma_get_design_system_summary` |
+| Feed a design system to an AI code generator | `figma_get_design_system_kit` |
+
+> **Tip:** Prefer `figma_get_design_system_kit` over calling `figma_get_variables`, `figma_get_component`, and `figma_get_styles` separately. It returns all three in a single optimized call with visual specs and resolved values.
+
+### For Design Creation
+
+| Task | Tool | Example |
+|------|------|---------|
+| Create UI components | `figma_execute` | Buttons, cards, modals |
+| Create frames/layouts | `figma_execute` | Auto-layout containers |
+| Add text | `figma_execute` | Labels, headings, paragraphs |
+| Create shapes | `figma_execute` | Icons, decorations |
+| Modify existing elements | `figma_execute` | Change colors, resize |
+| Create pages | `figma_execute` | Organize file structure |
+
+### For Variable Management
+
+| Task | Tool |
+|------|------|
+| Create new token collection | `figma_create_variable_collection` |
+| Add a single design token | `figma_create_variable` |
+| Add multiple design tokens (3+) | `figma_batch_create_variables` |
+| Change a single token value | `figma_update_variable` |
+| Change multiple token values (3+) | `figma_batch_update_variables` |
+| Set up a full token system from scratch | `figma_setup_design_tokens` |
+| Reorganize token names | `figma_rename_variable` |
+| Remove tokens | `figma_delete_variable` |
+| Add themes (Light/Dark) | `figma_add_mode` |
+| Rename themes | `figma_rename_mode` |
+
+### For Design-Code Parity
+
+| Task | Tool |
+|------|------|
+| Compare Figma specs against code | `figma_check_design_parity` |
+| Generate component documentation | `figma_generate_component_doc` |
+| Audit component before sign-off | `figma_check_design_parity` |
+| Create design system reference docs | `figma_generate_component_doc` |
+| Notify designers of parity drift | `figma_post_comment` |
+| Review existing feedback threads | `figma_get_comments` |
+| Clean up resolved feedback | `figma_delete_comment` |
+
+### Prerequisites Checklist
+
+Before using write tools, ensure one of the following:
+
+**Local Mode:**
+1. ✅ Running in **Local Mode** (NPX/Git)
+2. ✅ **Desktop Bridge plugin** is running in your Figma file
+3. ✅ `figma_get_status` returns `setup.valid: true`
+
+**Cloud Mode:**
+1. ✅ **Desktop Bridge plugin** is running in your Figma file with Cloud Mode enabled
+2. ✅ Paired via `figma_pair_plugin` (or natural language: "connect to my Figma plugin")
+
+---
+
+## 🔍 Design-Code Parity Tools
+
+### `figma_check_design_parity`
+
+Compare a Figma component's design specs against your code implementation. Produces a scored parity report with actionable fix items.
+
+**When to Use:**
+- Before sign-off on a component implementation
+- During design system audits to catch drift between design and code
+- To verify that code accurately reflects the design spec
+
+**Usage:**
+```javascript
+figma_check_design_parity({
+  fileUrl: 'https://figma.com/design/abc123',
+  nodeId: '695:313',
+  codeSpec: {
+    visual: {
+      backgroundColor: '#FFFFFF',
+      borderColor: '#E4E4E7',
+      borderRadius: 12,
+      opacity: 1
+    },
+    spacing: {
+      paddingTop: 24,
+      paddingRight: 24,
+      paddingBottom: 24,
+      paddingLeft: 24,
+      gap: 24
+    },
+    componentAPI: {
+      props: [
+        { name: 'className', type: 'string', required: false },
+        { name: 'children', type: 'ReactNode', required: false }
+      ]
+    },
+    metadata: {
+      name: 'Card',
+      filePath: 'src/components/card/card.tsx'
+    }
+  },
+  canonicalSource: 'design',
+  enrich: true
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL (uses current URL if omitted)
+- `nodeId` (required): Component node ID
+- `codeSpec` (required): Structured code-side data with sections:
+  - `visual`: backgroundColor, borderColor, borderRadius, opacity, shadow, etc.
+  - `spacing`: paddingTop/Right/Bottom/Left, gap, width, height, minWidth, maxWidth
+  - `typography`: fontFamily, fontSize, fontWeight, lineHeight, letterSpacing, color
+  - `tokens`: usedTokens array, hardcodedValues array, tokenCoverage percentage
+  - `componentAPI`: props array (name, type, required, defaultValue, description)
+  - `accessibility`: role, ariaLabel, keyboardInteraction, focusManagement, contrastRatio
+  - `metadata`: name, filePath, version, status, tags, description
+- `canonicalSource` (optional): Which source is truth — `"design"` (default) or `"code"`
+- `enrich` (optional): Enable token/enrichment analysis (default: true)
+
+**Returns:**
+- `summary`: Total discrepancies, parity score (0-100), counts by severity (critical/major/minor/info), categories breakdown
+- `discrepancies`: Array of property mismatches with category, severity, design value, code value, and suggestion
+- `actionItems`: Structured fix instructions specifying which side to fix, which Figma tool or code change to apply
+- `designData`: Raw Figma data extracted from the component (fills, strokes, spacing, properties)
+- `codeData`: The codeSpec as provided
+- `ai_instruction`: Structured presentation guide for consistent report formatting
+
+**Parity Score:**
+`score = max(0, 100 - (critical×15 + major×8 + minor×3 + info×1))`
+
+**COMPONENT_SET Handling:**
+When given a COMPONENT_SET node, the tool automatically resolves to the default variant (first child) for visual comparisons (fills, strokes, spacing, typography). Component property definitions and naming are read from the COMPONENT_SET itself.
+
+---
+
+### `figma_generate_component_doc`
+
+Generate platform-agnostic markdown documentation for a component by merging Figma design data with code-side info. Output is compatible with Docusaurus, Mintlify, ZeroHeight, Knapsack, Supernova, and any markdown-based docs platform.
+
+**When to Use:**
+- Generating design system component documentation
+- Creating developer handoff documentation
+- Building a component reference library
+
+**Usage:**
+```javascript
+figma_generate_component_doc({
+  fileUrl: 'https://figma.com/design/abc123',
+  nodeId: '695:313',
+  codeInfo: {
+    importStatement: "import { Button } from '@mylib/ui'",
+    props: [
+      { name: 'variant', type: "'primary' | 'secondary' | 'ghost'", required: false, defaultValue: "'primary'", description: 'Visual style variant' },
+      { name: 'size', type: "'sm' | 'md' | 'lg'", required: false, defaultValue: "'md'", description: 'Button size' }
+    ],
+    events: [
+      { name: 'onClick', payload: 'React.MouseEvent<HTMLButtonElement>', description: 'Fires when clicked' }
+    ],
+    usageExamples: [
+      { title: 'Basic', code: '<Button>Click me</Button>' },
+      { title: 'Destructive', code: '<Button variant="destructive"><Trash2 /> Delete</Button>' }
+    ]
+  },
+  systemName: 'MyDesignSystem',
+  includeFrontmatter: true,
+  enrich: true
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL (uses current URL if omitted)
+- `nodeId` (required): Component node ID
+- `codeInfo` (optional): Code-side documentation info. Read the component source code first, then fill in relevant sections:
+  - `importStatement`: Import path
+  - `filePath`: Component file path
+  - `packageName`: Package name
+  - `props`: Array of prop definitions (name, type, required, defaultValue, description)
+  - `events`: Array of event definitions (name, payload, description)
+  - `slots`: Array of slot/sub-component definitions (name, description)
+  - `usageExamples`: Array of code examples (title, code, language)
+  - `changelog`: Version history entries (version, date, changes)
+  - `variantDefinition`: CVA or variant definition code block (rendered in Implementation section)
+  - `subComponents`: Array of composable sub-parts (name, description, element, dataSlot, props)
+  - `sourceFiles`: Array of related files (path, role, variants, description) — used for Source Files table and Storybook link detection
+  - `baseComponent`: Base component attribution (name, url, description) — e.g., "Built on shadcn/ui Alert"
+- `sections` (optional): Toggle individual sections on/off (overview, statesAndVariants, visualSpecs, implementation, accessibility, changelog)
+- `outputPath` (optional): Suggested file path for saving
+- `systemName` (optional): Design system name for documentation headers
+- `enrich` (optional): Enable enrichment analysis (default: true)
+- `includeFrontmatter` (optional): Include YAML frontmatter metadata (default: true)
+- `history` (optional): Pull an ongoing changelog instead of relying on hand-written `codeInfo.changelog` entries. Both sources are **off by default**, so existing callers are unaffected.
+  - `figma` (default `false`): Walk Figma version history and diff each consecutive pair **scoped to this component**, producing one row per version that actually changed it
+  - `git` (default `false`): Run `git log` for the component's source files. **Local mode only** — the Cloudflare Worker runtime has no filesystem or git binary
+  - `versions` (default `5`, max `20`): How many Figma versions to walk back
+  - `includeAutosaves` (default `false`): Include unlabeled Figma auto-saves. Prefers labeled versions, but **auto-falls back to auto-saves when a file has none** (see below), so you rarely need to set this
+  - `mode` (`summary` | `standard` | `detailed`, default `standard`): `detailed` names individual component properties and variable bindings instead of counting them
+  - `gitLimit` (default `10`, max `50`): How many commits to list
+  - `gitPaths` (optional): Explicit paths to log. Defaults to `codeInfo.filePath` plus every `codeInfo.sourceFiles[].path`
+  - `repoPath` (optional): Repo directory to run git in. Defaults to the server's working directory
+
+**Returns:**
+- `componentName`: Resolved component name
+- `markdown`: Complete markdown documentation with frontmatter, overview, states & variants, visual specs, implementation, accessibility sections
+- `includedSections`: Which sections were generated
+- `dataSourceSummary`: What data sources were available (Figma enriched, code info, variables, styles)
+- `historySummary`: Present only when `history` was requested — per-source row counts, API calls made, resolved git paths, and any degradation notes
+- `suggestedOutputPath`: Where to save the file
+- `ai_instruction`: Guidance for the AI on next steps (saving file, asking user for path)
+
+**COMPONENT_SET Handling:**
+Same as parity checker — resolves to default variant for visual specs, reads property definitions from the COMPONENT_SET.
+
+---
+
+#### Component History (`history`)
+
+When either history source is enabled, the generated doc gains a `## History` section in place of the pass-through `## Changelog`:
+
+```javascript
+figma_generate_component_doc({
+  nodeId: '695:313',
+  codeInfo: { filePath: 'src/components/Button/Button.tsx' },
+  history: { figma: true, git: true, versions: 10, mode: 'detailed' }
+})
+```
+
+```markdown
+## History
+
+### Design history
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| v1.2 icon slot | 2026-03-01 | carol | Added 1 layer: `Icon`<br>Property `Disabled` added (BOOLEAN) |
+
+### Code history
+
+| Commit | Date | Author | Message |
+|--------|------|--------|---------|
+| `a1b2c3d` | 2026-03-02 | TJ | feat(button): add icon slot |
+
+### Release notes
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.1.0 | 2026-03-05 | Icon slot support |
+```
+
+Any `codeInfo.changelog` entries you pass are still rendered, folded in as **Release notes**. Frontmatter also gains `figmaVersion` / `figmaVersionDate` provenance — kept separate from the code-side `version` semver.
+
+**Cost:** design history costs roughly one API call per version walked (N rows needs N+1 scoped node snapshots). Past-version snapshots are immutable and cached per process, so repeat runs on the same component are nearly free.
+
+**Scoping:** history tracks the **COMPONENT_SET** when the node belongs to one. Variant node IDs churn as variants are added and removed, so the set is the stable identity across versions.
+
+**Labeled versions vs auto-saves:** labeled versions make the best changelog rows, but many real design-system files have none at all — a mature file was verified live with 72 auto-saves and 0 labeled versions. Rather than emit an empty section there, history falls back to auto-saves automatically and says so in a note (`historySummary.design.usedAutosaveFallback`). Auto-save noise is largely absorbed downstream: a version only becomes a row if it actually changed the scoped component — on a real 24-variant Button, 20 version-pairs produced 4 rows. Auto-save rows render as `_(auto-save)_` with the date rather than the raw 19-digit version ID; that ID stays available as `historySummary.design.latestVersionId`.
+
+**Coverage limits** — the generated doc states these inline so an empty table is never misread as "nothing changed":
+- Figma's REST version snapshots **omit description and Dev Mode annotation edits**, raw layout/visual properties, and variable *value* changes. Structure (child layers), component property definitions, variable *bindings*, and renames are tracked, at depth 2
+- Version-history retention is plan-dependent, so lower tiers expose a shorter window
+- Reading version history requires the `file_versions:read` OAuth scope, or the **Versions** Read permission on a Personal Access Token. Without it the section degrades to an explanatory note rather than failing the doc
+- `git` history uses `--follow` (renames traced) only when exactly one path is resolved — git supports it for a single pathspec only
+
+---
+
+## 💬 Comment Tools
+
+### `figma_get_comments`
+
+Get comments on a Figma file. Returns comment threads with author, message, timestamps, and pinned node locations.
+
+**When to Use:**
+- Reviewing feedback threads on a design file
+- Checking for open comments before a release
+- Retrieving comment IDs to reply to or delete
+
+**Usage:**
+```javascript
+figma_get_comments({
+  fileUrl: 'https://figma.com/design/abc123',
+  include_resolved: false,
+  as_md: true
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL (uses current URL if omitted)
+- `as_md` (optional): Return comment message bodies as markdown (default: false)
+- `include_resolved` (optional): Include resolved comment threads (default: false)
+
+**Returns:**
+- `comments`: Array of comment objects with `id`, `message`, `user`, `created_at`, `resolved_at`, `client_meta` (pinned location)
+- `summary`: Total, active, resolved, and returned counts
+
+---
+
+### `figma_post_comment`
+
+Post a comment on a Figma file, optionally pinned to a specific design node. Supports replies to existing threads.
+
+**When to Use:**
+- After `figma_check_design_parity` to notify designers of drift
+- Leaving feedback on specific components or elements
+- Replying to an existing comment thread
+
+**Usage:**
+```javascript
+// Pin a comment to a specific node
+figma_post_comment({
+  fileUrl: 'https://figma.com/design/abc123',
+  message: 'Border-radius in code uses 8px but Figma shows 6px. Please update.',
+  node_id: '695:313'
+})
+
+// Reply to an existing comment thread
+figma_post_comment({
+  fileUrl: 'https://figma.com/design/abc123',
+  message: 'Fixed in the latest push.',
+  reply_to_comment_id: '1627922741'
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL (uses current URL if omitted)
+- `message` (required): The comment message text
+- `node_id` (optional): Node ID to pin the comment to (e.g., `'695:313'`)
+- `x` (optional): X offset for comment placement relative to the node
+- `y` (optional): Y offset for comment placement relative to the node
+- `reply_to_comment_id` (optional): ID of an existing comment to reply to
+
+**Returns:**
+- `comment`: Created comment object with `id`, `message`, `created_at`, `user`, `client_meta`
+
+<Warning>
+**@mentions are not supported via the API.** Including `@name` in the message renders as plain text, not a clickable Figma mention tag. Clickable @mentions with notifications are a Figma UI-only feature. To notify specific people, share the comment link or use Figma's built-in notification system.
+</Warning>
+
+---
+
+### `figma_delete_comment`
+
+Delete a comment from a Figma file by its comment ID.
+
+**When to Use:**
+- Cleaning up test or outdated comments
+- Removing resolved feedback after fixes are confirmed
+- Managing comment threads programmatically
+
+**Usage:**
+```javascript
+figma_delete_comment({
+  fileUrl: 'https://figma.com/design/abc123',
+  comment_id: '1627922741'
+})
+```
+
+**Parameters:**
+- `fileUrl` (optional): Figma file URL (uses current URL if omitted)
+- `comment_id` (required): The ID of the comment to delete (get IDs from `figma_get_comments`)
+
+**Returns:**
+- `success`: Boolean indicating deletion success
+- `deleted_comment_id`: The ID that was deleted
+
+---
+
+## 📝 Annotation Tools
+
+Annotation tools require the Desktop Bridge plugin to be running in Figma. Annotations are distinct from comments: they are node-level design specs that can pin specific properties (fills, width, typography, etc.) and support markdown-formatted labels. Designers use them to communicate animation timings, accessibility requirements, interaction specs, and other implementation details.
+
+### `figma_get_annotations`
+
+Read annotations from a Figma node. Annotations are designer-authored specs attached to nodes — they can include notes (plain text or markdown), pinned design properties (fills, width, fontSize, etc.), and category labels.
+
+**Mode:** Local / Cloud
+
+**When to Use:**
+- Discovering designer specs on a component before implementation
+- Reading animation timings, interaction behaviors, or accessibility requirements
+- Getting all annotations across a component tree for documentation
+
+**Usage:**
+```javascript
+// Read annotations from a component
+figma_get_annotations({ nodeId: '695:313' })
+
+// Read annotations from a component and all its children
+figma_get_annotations({ nodeId: '695:313', include_children: true, depth: 3 })
+```
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `nodeId` | string | Yes | Node ID to read annotations from (e.g., '695:313') |
+| `include_children` | boolean | No | Also read annotations from child nodes (default: false) |
+| `depth` | number | No | How many levels deep to traverse when include_children is true (default: 1, max recommended: 5) |
+
+**Returns:**
+- `nodeId`, `nodeName`, `nodeType`: The target node info
+- `annotations`: Array of annotations with `label`, `labelMarkdown`, `properties` (pinned design properties), `categoryId`, `categoryName`
+- `annotationCount`: Number of annotations on this node
+- `children`: (when include_children=true) Array of child nodes with their annotations
+- `childAnnotationCount`: Total annotations across children
+- `availableCategories`: List of annotation categories in the file
+
+### `figma_set_annotations`
+
+Write or clear annotations on a Figma node. Supports plain text labels, rich markdown labels, pinned design properties, and annotation categories. This operation is undoable in Figma (Cmd+Z).
+
+**Mode:** Local / Cloud
+
+**When to Use:**
+- Documenting animation timings and easing curves on components
+- Adding accessibility requirements to design nodes
+- Communicating implementation notes from design reviews
+- Clearing outdated annotations after implementation is complete
+
+**Usage:**
+```javascript
+// Write annotations with markdown and pinned properties
+figma_set_annotations({
+  nodeId: '695:313',
+  annotations: [
+    { label: 'Supports keyboard navigation via Tab and Enter' },
+    {
+      labelMarkdown: '**Animation:** Press uses `ease-out` with `150ms`',
+      properties: [{ type: 'fills' }, { type: 'padding' }],
+      categoryId: '1026:1'
+    }
+  ]
+})
+
+// Append to existing annotations
+figma_set_annotations({
+  nodeId: '695:313',
+  annotations: [{ label: 'Min touch target: 44x44px' }],
+  mode: 'append'
+})
+
+// Clear all annotations
+figma_set_annotations({ nodeId: '695:313', annotations: [] })
+```
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `nodeId` | string | Yes | Node ID to write annotations to (e.g., '695:313') |
+| `annotations` | array | Yes | Array of annotation objects (see below). Pass `[]` to clear all annotations. |
+| `mode` | string | No | `replace` (default) overwrites all existing annotations. `append` adds to existing. |
+
+**Annotation object fields:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `label` | string | No | Plain text annotation label |
+| `labelMarkdown` | string | No | Rich text with markdown (bold, italic, links, lists, code, headers) |
+| `properties` | array | No | Array of `{ type: string }` for pinned properties (e.g., `fills`, `width`, `fontSize`) |
+| `categoryId` | string | No | Annotation category ID (use `figma_get_annotation_categories` to list) |
+
+**Returns:**
+- `success`: Boolean indicating write success
+- `nodeId`: The target node ID
+- `nodeName`: The node name
+- `annotationCount`: Number of annotations after the operation
+- `mode`: The write mode used
+
+> **Note:** Pinned properties must be valid for the node type. For example, `cornerRadius` works on COMPONENT nodes but not on COMPONENT_SET nodes. Use `figma_get_annotation_categories` to discover valid category IDs.
+
+### `figma_get_annotation_categories`
+
+List available annotation categories in the current Figma file. Categories group annotations by purpose (e.g., interactions, accessibility, development notes).
+
+**Mode:** Local / Cloud
+
+**When to Use:**
+- Discovering available categories before creating annotations
+- Listing category IDs for use with `figma_set_annotations`
+
+**Usage:**
+```javascript
+figma_get_annotation_categories()
+// Returns: { categories: [{ id: '1026:0' }, { id: '1026:1' }, ...] }
+```
+
+**Parameters:** None
+
+**Returns:**
+- `categories`: Array of `{ id, name }` category objects
+
+### Annotations Workflow
+
+| Use Case | Tool |
+|----------|------|
+| Discover designer specs on a component | `figma_get_annotations` |
+| Get all annotations across a component tree | `figma_get_annotations` (with `include_children: true`) |
+| Document animation timings and interaction behaviors | `figma_set_annotations` |
+| Add accessibility requirements to components | `figma_set_annotations` |
+| Clear outdated annotations after implementation | `figma_set_annotations` (with `annotations: []`) |
+| List annotation categories for organizing notes | `figma_get_annotation_categories` |
+| Generate component docs including annotations | `figma_generate_component_doc` |
+
+---
+
+
+## 🖼️ Image Tools
+
+### `figma_set_image_fill`
+
+Set an image fill on one or more Figma nodes. Accepts base64-encoded image data or (in Local Mode) an absolute file path.
+
+**Mode:** Local / Cloud
+
+**When to Use:**
+- Applying photos, illustrations, or textures to frames and shapes
+- Setting hero images, avatars, or background images
+- Replacing placeholder images with real assets
+
+**Usage:**
+```javascript
+// Base64 image data
+figma_set_image_fill({
+  nodeIds: ["123:456", "789:012"],
+  imageData: "iVBORw0KGgo...",  // base64-encoded PNG or JPEG
+  scaleMode: "FILL"
+})
+
+// File path (Local Mode only)
+figma_set_image_fill({
+  nodeIds: ["123:456"],
+  imageData: "/tmp/hero-image.jpg",
+  scaleMode: "FIT"
+})
+```
+
+**Parameters:**
+- `nodeIds` (required): Array of node IDs to apply the image fill to
+- `imageData` (required): Base64-encoded image data (JPEG/PNG), or an absolute file path starting with `/` (Local Mode only)
+- `scaleMode` (optional): How the image fills the node — `"FILL"` (default), `"FIT"`, `"CROP"`, or `"TILE"`
+
+**Returns:**
+- `imageHash`: Figma's internal hash for the created image
+- `updatedCount`: Number of nodes successfully updated
+- `nodes`: Array of updated node IDs and names
+
+---
+
+## 🔍 Accessibility Tools
+
+Three tools provide full-spectrum accessibility coverage across design and code — without maintaining a rule database. Design-side checks are bounded by Figma's API; code-side checks delegate to axe-core (Deque).
+
+### `figma_lint_design`
+
+Run comprehensive WCAG 2.2 accessibility and design quality checks on the current page or a specific node tree. Returns categorized findings with severity levels.
+
+**Mode:** Local / Cloud
+
+**When to Use:**
+- Checking designs for WCAG accessibility compliance (14 checks)
+- Finding hardcoded colors that should use design tokens
+- Detecting detached components, missing focus variants, color-only states
+- Auditing heading hierarchy, reading order, reflow readiness
+- Pre-handoff quality checks
+
+**Usage:**
+```javascript
+// Lint the current page for all issues
+figma_lint_design()
+
+// Only WCAG accessibility checks (14 rules)
+figma_lint_design({
+  rules: ["wcag"]
+})
+
+// Only design system hygiene
+figma_lint_design({
+  rules: ["design-system"]
+})
+
+// Specific rules only
+figma_lint_design({
+  rules: ["wcag-contrast", "wcag-focus-indicator", "wcag-image-alt"],
+  maxFindings: 50
+})
+
+// Lint a specific node tree
+figma_lint_design({
+  nodeId: "123:456",
+  maxDepth: 5
+})
+```
+
+**Parameters:**
+- `nodeId` (optional): Node ID to lint (defaults to current page)
+- `rules` (optional): Rule filter — `["all"]` (default), `["wcag"]` (14 rules), `["design-system"]`, `["layout"]`, or specific rule IDs
+- `maxDepth` (optional): Maximum tree depth to traverse (default: 10)
+- `maxFindings` (optional): Maximum findings before stopping (default: 100)
+
+**Rule Groups:**
+
+| Group | Rules | What It Checks |
+|-------|-------|---------------|
+| `wcag` | 14 rules (see below) | WCAG accessibility compliance |
+| `design-system` | `hardcoded-color`, `no-text-style`, `default-name`, `detached-component`, `token-misuse` | Design system hygiene |
+| `layout` | `no-autolayout`, `empty-container` | Layout quality |
+
+Each finding includes a `wcagLevel` field (`a`, `aa`, or `best-practice`) so teams can filter by their target conformance level.
+
+**Individual Rules:**
+
+| Rule | Severity | Level | Description |
+|------|----------|-------|-------------|
+| `wcag-contrast` | critical | AA | Text contrast below 4.5:1 (3:1 for large text ≥24px or ≥18.5px bold) |
+| `wcag-non-text-contrast` | critical | AA | UI component/graphical object below 3:1 against background |
+| `wcag-color-only` | critical | A | Information conveyed only through color (no icon/border indicator) |
+| `wcag-target-size` | critical | AA | Interactive elements smaller than 24x24px |
+| `wcag-focus-indicator` | critical | AA | Interactive component missing focus variant or visible indicator — blocker for keyboard users |
+| `wcag-disabled-no-context` | warning | AA | Disabled variant has no tooltip/helper text explaining why disabled. Recommends aria-disabled over HTML disabled to keep element focusable for screen readers. |
+| `wcag-text-size` | warning | best-practice | Text below 12px (readability best practice — WCAG 1.4.4 is about zoom support, not minimum size) |
+| `wcag-letter-spacing` | warning | best-practice | Negative letter spacing harms readability |
+| `wcag-image-alt` | warning | A | Image fills without description annotation |
+| `wcag-heading-hierarchy` | warning | A | Heading levels skip (e.g., H1 → H3) |
+| `wcag-reflow` | warning | AA | Fixed-position frames; content must support 320px min width (400% zoom on 1280px) |
+| `wcag-reading-order` | warning | A | Layer order doesn't match visual reading order |
+| `wcag-line-height` | info | best-practice | Line height below 1.5x (WCAG 1.4.12 requires supporting user overrides, not specific defaults) |
+| `wcag-paragraph-spacing` | info | best-practice | Paragraph spacing below 2x font size (same — about user override support) |
+| `token-misuse` | warning | — | Variable name prefix doesn't match usage (e.g., bg/* token as text fill) |
+| `hardcoded-color` | warning | — | Solid fills not bound to a variable or style |
+| `no-text-style` | warning | — | Text nodes without an applied text style |
+| `default-name` | warning | — | Nodes with generic Figma names |
+| `detached-component` | warning | — | Frames with component naming but not a component |
+| `no-autolayout` | warning | — | Frames with 2+ children without auto-layout |
+| `empty-container` | info | — | Frames with zero children |
+
+**Returns:**
+```json
+{
+  "rootNodeId": "0:1",
+  "rootNodeName": "My Page",
+  "nodesScanned": 142,
+  "categories": [
+    {
+      "rule": "wcag-contrast",
+      "severity": "critical",
+      "count": 3,
+      "description": "Text does not meet WCAG AA contrast ratio",
+      "nodes": [
+        { "id": "1:2", "name": "Label", "ratio": "2.3:1", "required": "4.5:1", "fg": "#AAAAAA", "bg": "#FFFFFF" }
+      ]
+    }
+  ],
+  "summary": {
+    "critical": 3,
+    "warning": 8,
+    "info": 1,
+    "total": 12
+  }
+}
+```
+
+**Natural language triggers:**
+- "Check my design for accessibility issues"
+- "Lint this page"
+- "Find hardcoded colors"
+- "Are there any detached components?"
+- "Run a WCAG contrast check"
+- "Audit the design quality"
+
+### `figma_audit_component_accessibility`
+
+Deep accessibility audit for a specific component or component set. Produces a scorecard covering state coverage, focus indicator quality, non-color differentiation, target size consistency, annotation completeness, and color-blind simulation.
+
+**Mode:** Local / Cloud
+
+**When to Use:**
+- Validating a component's accessibility before design handoff
+- Checking if all interactive states (focus, disabled, error) are present
+- Verifying color-blind safety with protanopia/deuteranopia/tritanopia simulation
+- Auditing whether components have accessibility documentation
+
+**Usage:**
+```javascript
+// Audit a component set
+figma_audit_component_accessibility({
+  nodeId: "438:1401"
+})
+
+// Audit with iOS touch target minimum (44px)
+figma_audit_component_accessibility({
+  nodeId: "438:1401",
+  targetSize: 44
+})
+
+// Audit current selection (no nodeId needed)
+figma_audit_component_accessibility()
+```
+
+**Parameters:**
+- `nodeId` (optional): Node ID of a COMPONENT_SET, COMPONENT, or INSTANCE. Falls back to current selection.
+- `targetSize` (optional): Minimum touch target size in px (default: 24 per WCAG 2.5.8). Use 44 for iOS, 48 for Android.
+
+**Scoring (0-100):**
+
+| Category (weight) | What It Checks |
+|---|---|
+| State Coverage (20%) | Presence of default, hover, focus, disabled, error, active, loading variants |
+| Focus Indicator (20%) | Focus variant exists + has visible stroke or shadow |
+| Color Differentiation (15%) | Status states use more than just color |
+| Target Size (15%) | All variants meet minimum touch target |
+| Annotations (10%) | Component description + accessibility notes |
+| Color-Blind Safety (20%) | Contrast preserved under protanopia, deuteranopia, tritanopia |
+
+### `figma_scan_code_accessibility`
+
+Scan HTML code for accessibility violations using axe-core (Deque). Runs structural/semantic checks via JSDOM — no browser needed. Visual rules (color contrast) are disabled since they're handled by `figma_lint_design`.
+
+**Mode:** Local / Cloud (standalone — no Figma connection required)
+
+**When to Use:**
+- Scanning component HTML for ARIA, label, and semantic issues
+- Checking code accessibility before merging
+- Generating a CodeSpec for design-to-code parity comparison
+- Validating that implemented code matches design accessibility intent
+
+**Usage:**
+```javascript
+// Scan component HTML
+figma_scan_code_accessibility({
+  html: '<button></button><img src="photo.jpg">'
+})
+
+// Filter to WCAG 2.0 AA rules only
+figma_scan_code_accessibility({
+  html: '<input type="text">',
+  tags: ["wcag2aa"]
+})
+
+// Auto-generate CodeSpec for parity checking
+figma_scan_code_accessibility({
+  html: '<button aria-label="Save" disabled>Save</button>',
+  mapToCodeSpec: true
+})
+```
+
+**Parameters:**
+- `html` (required): HTML string to scan (fragment or full document)
+- `tags` (optional): WCAG tag filter — `["wcag2a"]`, `["wcag2aa"]`, `["wcag22aa"]`, `["best-practice"]`
+- `context` (optional): CSS selector to scope the scan
+- `mapToCodeSpec` (optional): If true, auto-generates `codeSpecAccessibility` for use with `figma_check_design_parity`
+- `includePassingRules` (optional): Include pass/incomplete counts
+
+**End-to-end workflow:**
+```
+1. figma_lint_design          → visual a11y on design side
+2. figma_audit_component_a11y → component scorecard
+3. figma_scan_code_a11y       → structural a11y on code side
+   └─ mapToCodeSpec: true     → auto-generate CodeSpec
+4. figma_check_design_parity  → compare design intent vs code
+```
+
+---
+
+## 📌 FigJam Tools
+
+FigJam tools only work when the Desktop Bridge plugin is running in a FigJam board (`editorType === 'figjam'`). They return clear errors when used in Figma Design files.
+
+### `figjam_create_sticky`
+
+Create a sticky note on a FigJam board.
+
+**Mode:** Local / Cloud
+
+**Parameters:**
+| Parameter | Type   | Required | Description |
+|-----------|--------|----------|-------------|
+| `text`    | string | Yes      | Text content (max 5,000 chars) |
+| `color`   | string | No       | YELLOW, BLUE, GREEN, PINK, ORANGE, PURPLE, RED, LIGHT_GRAY, GRAY |
+| `x`       | number | No       | X position on canvas |
+| `y`       | number | No       | Y position on canvas |
+
+### `figjam_create_stickies`
+
+Batch create multiple sticky notes (max 200). Font is loaded once for the entire batch.
+
+**Mode:** Local / Cloud
+
+**Parameters:**
+| Parameter  | Type  | Required | Description |
+|------------|-------|----------|-------------|
+| `stickies` | array | Yes      | Array of `{text, color?, x?, y?}` objects (max 200) |
+
+### `figjam_create_connector`
+
+Connect two nodes with a connector line. Use node IDs from creation results.
+
+**Mode:** Local / Cloud
+
+**Parameters:**
+| Parameter     | Type   | Required | Description |
+|---------------|--------|----------|-------------|
+| `startNodeId` | string | Yes      | Node ID of the start element |
+| `endNodeId`   | string | Yes      | Node ID of the end element |
+| `label`       | string | No       | Text label on the connector |
+
+### `figjam_create_shape_with_text`
+
+Create a labeled shape for flowcharts and diagrams.
+
+**Mode:** Local / Cloud
+
+**Parameters:**
+| Parameter   | Type   | Required | Description |
+|-------------|--------|----------|-------------|
+| `text`      | string | No       | Text label |
+| `shapeType` | string | No       | ROUNDED_RECTANGLE (default), DIAMOND, ELLIPSE, TRIANGLE_UP, TRIANGLE_DOWN, PARALLELOGRAM_RIGHT, PARALLELOGRAM_LEFT, ENG_DATABASE, ENG_QUEUE, ENG_FILE, ENG_FOLDER |
+| `x`         | number | No       | X position |
+| `y`         | number | No       | Y position |
+
+### `figjam_create_table`
+
+Create a table with optional cell data.
+
+**Mode:** Local / Cloud
+
+**Parameters:**
+| Parameter | Type     | Required | Description |
+|-----------|----------|----------|-------------|
+| `rows`    | number   | Yes      | Number of rows (1-100) |
+| `columns` | number   | Yes      | Number of columns (1-50) |
+| `data`    | string[][] | No    | 2D array of cell text (row-major order) |
+| `x`       | number   | No       | X position |
+| `y`       | number   | No       | Y position |
+
+### `figjam_create_code_block`
+
+Create a code block for sharing snippets and technical documentation.
+
+**Mode:** Local / Cloud
+
+**Parameters:**
+| Parameter  | Type   | Required | Description |
+|------------|--------|----------|-------------|
+| `code`     | string | Yes      | Code content (max 50,000 chars) |
+| `language` | string | No       | JAVASCRIPT, PYTHON, TYPESCRIPT, JSON, HTML, CSS, etc. |
+| `x`        | number | No       | X position |
+| `y`        | number | No       | Y position |
+
+### `figjam_auto_arrange`
+
+Arrange nodes in a grid, horizontal row, or vertical column layout.
+
+**Mode:** Local / Cloud
+
+**Parameters:**
+| Parameter | Type     | Required | Description |
+|-----------|----------|----------|-------------|
+| `nodeIds` | string[] | Yes      | Array of node IDs to arrange (max 500) |
+| `layout`  | string   | No       | `grid` (default), `horizontal`, or `vertical` |
+| `spacing` | number   | No       | Spacing between nodes in pixels (default: 40) |
+| `columns` | number   | No       | Grid columns (defaults to sqrt of node count) |
+
+### `figjam_get_board_contents`
+
+Read all content from a FigJam board. Returns stickies, shapes, connectors, tables, code blocks, and sections with their text content, positions, and type-specific properties (colors, shape types, cell data, connector endpoints).
+
+**Mode:** Local / Cloud
+
+**Parameters:**
+| Parameter   | Type     | Required | Description |
+|-------------|----------|----------|-------------|
+| `nodeTypes` | string[] | No       | Filter by type: STICKY, SHAPE_WITH_TEXT, CONNECTOR, TABLE, CODE_BLOCK, SECTION, FRAME, TEXT. Omit for all. |
+| `maxNodes`  | number   | No       | Maximum nodes to return (1-1000, default: 500) |
+
+**Returns:**
+- `nodes` — Array of node objects with id, type, name, position, dimensions, and type-specific data
+- `totalFound` — Number of nodes returned
+- `truncated` — Whether results were capped at maxNodes
+- `page` — Current page name
+
+### `figjam_get_connections`
+
+Read the connection graph from a FigJam board. Returns all connectors as edges with their start/end node references and labels, plus a lookup of connected nodes.
+
+**Mode:** Local / Cloud
+
+**Parameters:** None
+
+**Returns:**
+- `edges` — Array of `{connectorId, startNodeId, endNodeId, label}`
+- `connectedNodes` — Map of node ID → `{id, type, name, text}`
+- `totalConnectors` — Number of connectors found
+- `totalConnectedNodes` — Number of unique connected nodes
+
+---
+
+## ☁️ Cloud Relay
+
+### `figma_pair_plugin`
+
+Generate a pairing code to connect the Figma Desktop Bridge plugin to the cloud relay. This enables write operations from web-based AI clients.
+
+**Mode:** Cloud only (available on `/mcp` endpoint)
+
+**Parameters:** None
+
+**Returns:**
+- `code` — 6-character alphanumeric pairing code (uppercase, no ambiguous characters)
+- `expiresIn` — Expiry time (5 minutes)
+- Instructions for the user
+
+**Natural language triggers:**
+- "Connect to my Figma plugin"
+- "Pair with my design file"
+- "Set up the cloud connection"
+- "Link Figma to this chat"
+
+**How it works:**
+1. Generates a unique 6-character code stored in KV with 5-minute TTL
+2. User enters code in the Desktop Bridge plugin's Cloud Mode section
+3. Plugin connects via WebSocket to the cloud relay Durable Object
+4. All subsequent write tool calls route through the relay to the plugin
+
+**Important:** The pairing code expires after 5 minutes. If it expires before the plugin connects, generate a new one.
+
+---
+
+## 🕒 Version History Tools
+
+Six tools that turn a Figma file from a static snapshot into a queryable history. They compose: list versions → diff → generate changelog → blame specific changes back to the version that introduced them. All cache aware (past versions are immutable, so repeat queries on the same range cost zero new API calls).
+
+**Required scope:** `file_versions:read` (OAuth) or **Versions** (Read) on a Personal Access Token, in addition to the standard `file_content:read`.
+
+### `figma_get_file_versions`
+
+List a file's version history with author, label, description, and timestamp metadata. Auto-paginates up to `max_versions`. Defaults to **labeled-only** (skips auto-saves) — pass `include_autosaves: true` to see every saved state.
+
+**Usage:**
+```javascript
+figma_get_file_versions({
+  fileUrl: 'https://www.figma.com/design/abc123/My-File',  // optional
+  include_autosaves: false,                                // default
+  max_versions: 50,                                        // default 50, max 200
+  cursor: 'vSomeId'                                        // optional, for pagination
+})
+```
+
+Returns `{ versions: [...], pagination: { has_more, next_cursor, returned, filtered_out_autosaves } }`. Each version entry includes `id`, `label`, `description`, `created_at`, `user.handle`, and `is_labeled`.
+
+### `figma_get_file_at_version`
+
+Snapshot a file (or selected nodes) as it existed at a past `version_id`. Thin wrapper over `figma_get_file_data` with the version param plumbed through.
+
+**Usage:**
+```javascript
+figma_get_file_at_version({
+  version_id: '2332825592044334783',
+  node_ids: ['4271:9562'],   // optional — scope to specific nodes
+  depth: 2                    // optional — limit recursion
+})
+```
+
+### `figma_diff_versions`
+
+Structured diff between two versions. Always returns a cheap page-structure diff (~2 API calls, parallel). When `component_ids` are passed, additionally produces per-node diffs at depth=2: added/removed children (variants), name/description changes, `componentPropertyDefinitions` changes, and `boundVariables` deltas.
+
+**Usage:**
+```javascript
+figma_diff_versions({
+  from_version: '2285226350723738406',
+  to_version: '2332825592044334783',  // or 'current' for HEAD
+  component_ids: ['4271:9562'],        // optional — falls back to current Figma selection
+  mode: 'detailed'                     // 'summary' | 'standard' (default) | 'detailed'
+})
+```
+
+**Note:** Variable VALUE history is not retrievable from Figma REST API. Variable definition value changes between versions are not represented; only binding-reference changes on scoped nodes are detected. This limitation is surfaced in the response's `notes[]`.
+
+### `figma_get_changes_since_version`
+
+Convenience wrapper for `figma_diff_versions` with `to_version="current"` (HEAD). Useful for "what's changed since the last code-sync" workflows.
+
+```javascript
+figma_get_changes_since_version({
+  since_version: '2332825592044334783',
+  component_ids: ['4271:9562']  // optional, falls back to selection
+})
+```
+
+### `figma_generate_changelog`
+
+Markdown changelog generator. Wraps `figma_diff_versions` with author enrichment (one extra cheap API call to look up labels and authors for the from/to versions). Returns BOTH a `markdown` string ready for release notes / PRs / Storybook MDX, and the structured diff payload.
+
+```javascript
+figma_generate_changelog({
+  from_version: 'vEarlier',
+  to_version: 'current',
+  component_ids: ['4271:9562'],   // optional, falls back to selection
+  mode: 'standard'                // 'summary' | 'standard' (default) | 'detailed'
+})
+```
+
+Mode controls verbosity: `summary` produces a one-line release note; `standard` includes sectioned page + per-component change counts; `detailed` includes per-property and per-binding bullets.
+
+### `figma_blame_node`
+
+Find the version that introduced a specific change to a node — answers "who/when added this." Walks history backward via **binary search** (~log₂(N) probes instead of N), so a 200-version lookback typically costs ~8 API calls instead of 200.
+
+```javascript
+figma_blame_node({
+  node_id: '4271:9562',                          // optional, falls back to selection
+  target_component_property: 'Disabled#1:2',     // OR target_child_node_id
+  start_version: 'current',                      // walk backward from here
+  max_versions_to_walk: 200,                     // default 200, max 500
+  include_autosaves: true                        // default true — better attribution
+})
+```
+
+Returns `{ introduced_at: { version_id, label, created_at, user_handle, is_labeled }, attribution_certainty, summary, notes }`.
+
+`attribution_certainty` is one of:
+- `"exact"` — the introduction point is fully localized and authored by a real user
+- `"system_attributed"` — the introducing version was a system-triggered autosave (`user="Figma"`); set `include_autosaves: false` and re-run to find the labeled shipping author
+- `"exists_at_lookback_horizon"` — the actual introduction is older than `max_versions_to_walk`; raise the cap and retry
+- `"metadata_unavailable"` — introduction was at `start_version` itself but author lookup couldn't reach it within the version-list lookback
+
+**Honest about limits:** binary search assumes the target's existence is monotonic (added once, never removed). If the target was added, removed, then re-added, the tool may report a different introduction point than the original. This is called out in `notes[]` on every response.
+
+---
+
+## Error Handling
+
+All tools return structured error responses:
+
+```json
+{
+  "error": "Error message",
+  "message": "Human-readable description",
+  "hint": "Suggestion for resolution"
+}
+```
+
+Common errors:
+- `"FIGMA_ACCESS_TOKEN not configured"` - Set up your token (see installation guide)
+- `"Failed to connect to browser"` - Browser initializing or connection issue
+- `"Invalid Figma URL"` - Check URL format
+- `"Node not found"` - Verify node ID is correct
+- `"Desktop Bridge plugin not found"` - Ensure plugin is running in Figma
+- `"Invalid hex color"` - Check hex format (use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA)
+
+See [Troubleshooting Guide](TROUBLESHOOTING.md) for detailed solutions.

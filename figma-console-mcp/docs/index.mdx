@@ -1,0 +1,314 @@
+---
+title: "Figma Console MCP"
+description: "Your design system as an API. Connect AI to Figma for extraction, creation, debugging, and token sync."
+---
+
+<Note>
+**New in v1.40.0 — Design System Extraction:** Turn a production codebase into a design system. Seven Local-Mode `figma_ds_*` tools scan one or more apps (usage-ranked component inventory with vendor classification, variant inference from real call sites, duplicate detection, and a UI-kit-vs-design-system architecture pass), mine the de-facto styling into DTCG tokens with per-token provenance (multi-mode CSS custom properties, SCSS variables, Tailwind config values, shadcn HSL triples, utility-class frequency mining), scaffold the design-system package, wire a fresh Storybook workshop to the app's real theme layers and fonts, deep-extract components for porting with CSF3 story scaffolds, verify with deterministic fidelity evals, and persist porting progress across sessions. The extracted tokens import straight into Figma variables via `figma_import_tokens` — a full code → design system → Figma round-trip. Also fixes the token formatters quoting CSS functional expressions like `cubic-bezier(...)`, which silently killed transitions. Server-only — no plugin re-import needed. [See what's new →](https://github.com/southleft/figma-console-mcp/blob/main/CHANGELOG.md#1400---2026-08-16)
+</Note>
+
+# Your Design System as an API
+
+Design systems shouldn't be static documents locked in a visual tool. They should be **queryable**, **programmable**, and **always in sync** with your codebase.
+
+Figma Console MCP bridges the gap between design and development—giving AI assistants complete access to your Figma files for extraction, creation, and debugging.
+
+<Columns cols={4}>
+  <Card title="Extract" icon="download">
+    Variables, styles, and components as structured data
+  </Card>
+  <Card title="Sync" icon="arrows-rotate">
+    Bidirectional token sync between Figma and your codebase
+  </Card>
+  <Card title="Create" icon="wand-magic-sparkles">
+    Design files, FigJam boards, and Slides presentations
+  </Card>
+  <Card title="Audit" icon="universal-access">
+    Accessibility scanning across design and code
+  </Card>
+</Columns>
+
+---
+
+## The Problem
+
+Every time a developer opens Figma, eyeballs the padding, and writes `margin: 16px` instead of `var(--spacing-md)`—that's design system debt.
+
+Every design token manually transcribed to CSS, every component spec described in a Slack message, every "just check Figma" that leads to approximation—it compounds.
+
+**What if your design system was queryable?**
+
+```
+"Get the Button component specs and implement it in React with our design tokens."
+```
+
+Real component data. Real token values. Real code that uses your actual design system.
+
+---
+
+## Three Workflows
+
+<Tabs>
+  <Tab title="For Designers">
+    ### Make Your Work Programmable
+
+    Your design system is a product. Developers are your users. Give them an API.
+
+    <Steps>
+      <Step title="Define in Figma">
+        Create tokens and components as you normally would
+      </Step>
+      <Step title="AI Extracts">
+        Design tokens export to CSS, Tailwind, or Sass automatically
+      </Step>
+      <Step title="Stay in Sync">
+        Single source of truth that developers can query directly
+      </Step>
+    </Steps>
+
+    **Result:** Developers stop guessing at values. Design debt decreases. Documentation stays accurate.
+  </Tab>
+  <Tab title="For Developers">
+    ### Query Design Systems Directly
+
+    Stop treating Figma as a screenshot machine.
+
+    <Steps>
+      <Step title="Connect">
+        Add the MCP server to your AI assistant
+      </Step>
+      <Step title="Query">
+        Ask for token values, component specs, or visual references
+      </Step>
+      <Step title="Implement">
+        Get code that uses your actual design system variables
+      </Step>
+    </Steps>
+
+    **Result:** Implement components correctly the first time. Auto-generate token files. Debug plugins without Figma's dev tools.
+  </Tab>
+  <Tab title="For Web AI Clients">
+    ### Design from Any AI Chat
+
+    Use Claude.ai, v0, Replit, or Lovable to create and modify Figma designs — no local install needed.
+
+    <Steps>
+      <Step title="Open Figma">
+        Run the Desktop Bridge plugin in your file
+      </Step>
+      <Step title="Tell Your AI to Connect">
+        Say "Connect to my Figma plugin" — enter the pairing code in the plugin
+      </Step>
+      <Step title="Design with AI">
+        Create components, update variables, and manipulate designs through natural language
+      </Step>
+    </Steps>
+
+    **Result:** Full write access from any web-based AI client. Variables on any Figma plan. No Node.js required.
+  </Tab>
+</Tabs>
+
+---
+
+## Capabilities
+
+<AccordionGroup>
+  <Accordion title="Design System Extraction" icon="palette">
+    Extract variables, styles, and components as structured data. Export to CSS custom properties, Tailwind config, Sass variables, or JSON.
+
+    - `figma_get_design_system_kit` — **Full design system in one call** — tokens, components, styles, visual specs, and resolved values
+    - `figma_get_variables` — Design tokens with multi-format export
+    - `figma_get_styles` — Color, text, and effect styles
+    - `figma_get_component` — Component metadata or reconstruction spec
+    - `figma_get_design_system_summary` — Overview of entire system
+  </Accordion>
+
+  <Accordion title="Codebase → Design System Extraction" icon="dna">
+    Turn a production codebase into a design system — analyze, tokenize, scaffold, port, verify. Local Mode only (these tools read and write your local filesystem). The extracted tokens import straight into Figma variables via `figma_import_tokens`.
+
+    - `figma_ds_analyze` — Scan one or more app codebases: framework/styling/vendor detection, usage-ranked component inventory (vendored / wrapped / pure-vendor / bespoke), variant inference from real call sites, duplicate detection, and architecture classification (atomic levels, specializations, missing primitives)
+    - `figma_ds_extract_tokens` — Mine styling into DTCG tokens with per-token provenance: multi-mode CSS custom properties, SCSS variables, Tailwind config values, shadcn HSL triples, utility-class frequency mining
+    - `figma_ds_scaffold` — Generate the design-system package: token files, token/typography/iconography showcase pages, framework peer deps
+    - `figma_ds_setup_storybook` — Wire a fresh Storybook workshop to the extraction: the app's real theme layers and fonts, plus a theme toolbar from the extracted modes
+    - `figma_ds_extract_component` — Per-component porting manifest with a ready-to-adapt CSF3 story scaffold
+    - `figma_ds_verify` — Deterministic fidelity evals + Figma round-trip readiness
+    - `figma_ds_status` — Porting progress persisted across sessions
+  </Accordion>
+
+  <Accordion title="Design System Health Audit" icon="clipboard-check">
+    Score your design system's health with a deterministic six-category audit — naming & semantics, token architecture, component metadata, accessibility, consistency, and coverage — from any MCP client.
+
+    - `figma_audit_design_system_report` — Scored report as data: bounded summary, per-category chunked drill-down, clamped full JSON. Live-first fileKey-verified data with the source disclosed; 5-minute cache; every finding states whether this MCP can auto-fix it (with the exact tools) or needs a design decision
+    - `figma_audit_design_system` — The same audit as a visual dashboard (MCP Apps hosts with `ENABLE_MCP_APPS=true`)
+  </Accordion>
+
+  <Accordion title="Shared Library Inspection" icon="book">
+    Inspect components and variables from team libraries the current file has subscribed — without needing the library file's URL or an Enterprise plan.
+
+    - `figma_get_library_component_by_key` — **Resolve any component key to full props + variants + visual specs.** Tries `/v1/component_sets/{key}` then falls back to `/v1/components/{key}`. Returns `componentPropertyDefinitions`, every variant with its published key, and per-variant visual specs.
+    - `figma_get_library_components` — Discover all components in a library file (requires the library file URL/key)
+    - `figma_get_library_variables` — **List library tokens.** Plugin API path works on every Figma plan; filter by `libraryName`, `collectionName`, or `resolvedType`.
+    - `figma_import_library_variable` — Import a library variable into the current file. Returns a local `id` ready for `figma_set_fills` or any variable-binding tool.
+  </Accordion>
+
+  <Accordion title="Plugin Debugging" icon="terminal">
+    Real-time console log capture from your Figma plugins. No more console.log archaeology.
+
+    - `figma_get_console_logs` — Retrieve logs with filtering
+    - `figma_watch_console` — Real-time log streaming
+    - `figma_take_screenshot` — Capture UI state for debugging
+  </Accordion>
+
+  <Accordion title="Design Creation" icon="paintbrush">
+    Execute Figma Plugin API code directly. Build, modify, and organize components programmatically.
+
+    - `figma_execute` — Run any Plugin API code
+    - `figma_create_component_set` — Build a full variant set from an axes matrix (or combine existing components) in one call — variant keys returned, ready to instantiate
+    - `figma_arrange_component_set` — Organize variants with labels
+    - `figma_create_slot` / `figma_append_to_slot` — Add slots to components and populate them on instances (Figma Slots, GA at Config 2026), plus `figma_get_slots`, `figma_reset_slot`, and `figma_add_slot_property`
+    - `figma_create_variable` — Add design tokens
+    - Plus 20+ node manipulation tools
+  </Accordion>
+
+  <Accordion title="Token Sync" icon="arrows-rotate">
+    Bidirectional design token synchronization — a full code⇄Figma round-trip that replaces Style Dictionary and Tokens Studio's export pipeline.
+
+    - `figma_export_tokens` — Export variables to DTCG JSON (legacy hex or DTCG 2025.10 object dialect via `dtcgDialect`), CSS custom properties, Tailwind v4/v3, SCSS, TypeScript, JSON, Style Dictionary v3, or Tokens Studio. Round-trip safe via `$extensions["figma-console-mcp"]`; scopes and codeSyntax metadata included.
+    - `figma_import_tokens` — Push code-side edits back with a **full apply phase**: value updates, creates for missing collections/variables, renames matched by variable ID, real `VARIABLE_ALIAS` writes, and deletes gated strictly behind `strategy: "replace"`. Accepts both DTCG dialects; dry-run previews.
+    - `figma_setup_design_tokens` — Bootstrap a collection + modes + variables atomically, with alias values via DTCG brace references (`"{color.blue.600}"`)
+  </Accordion>
+
+  <Accordion title="Visual Context" icon="image">
+    AI sees your components visually and as structured data. Implementation guidance that matches the design.
+
+    - `figma_get_component_for_development` — Visual reference + specs
+    - `figma_capture_screenshot` — Node-specific renders
+    - `figma_get_component_image` — Export as PNG/SVG
+  </Accordion>
+
+  <Accordion title="FigJam Boards" icon="note-sticky">
+    Create and read FigJam collaborative whiteboards. Build affinity maps, flowcharts, retrospective boards, and more.
+
+    - `figjam_create_sticky` / `figjam_create_stickies` — Single or batch sticky notes with 9 colors
+    - `figjam_create_connector` — Connect nodes with labeled lines for flowcharts
+    - `figjam_create_shape_with_text` — Diamonds, ellipses, and engineering shapes
+    - `figjam_create_table` — Structured tables with cell data
+    - `figjam_get_board_contents` / `figjam_get_connections` — Read everything on the board
+
+    [Full FigJam Guide →](/figjam)
+  </Accordion>
+
+  <Accordion title="Slides Presentations" icon="presentation-screen">
+    Manage entire Figma Slides presentations. Create, edit, reorder, and navigate slides programmatically.
+
+    - `figma_list_slides` / `figma_get_slide_content` — Read slide data and content trees
+    - `figma_create_slide` / `figma_duplicate_slide` / `figma_delete_slide` — Slide lifecycle
+    - `figma_set_slide_transition` — 22 transition styles with 8 easing curves
+    - `figma_reorder_slides` — Restructure presentation order
+    - `figma_add_text_to_slide` / `figma_add_shape_to_slide` — Add content to slides
+
+    [Full Slides Guide →](/slides)
+  </Accordion>
+
+  <Accordion title="Accessibility Scanning" icon="universal-access">
+    Full-spectrum WCAG coverage across design and code:
+
+    - **Design-side lint** — 14 WCAG checks with AA/best-practice level tagging: contrast, non-text contrast, color-only, focus indicators, disabled context, spacing, alt text, heading hierarchy, reflow, reading order, token misuse
+    - **Component audit** — State coverage scoring, focus indicator quality, color-blind simulation (protanopia, deuteranopia, tritanopia)
+    - **Code-side scan** — axe-core with 104 rules via JSDOM: ARIA, labels, landmarks, semantics, headings
+    - **Parity bridge** — 9 checks ensuring design accessibility intent survives code implementation
+
+    [Full Accessibility Guide →](/tools#-accessibility-tools)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Choose Your Setup
+
+<Columns cols={3}>
+  <Card title="NPX Setup (Recommended)" icon="bolt" href="/setup#-npx-setup-recommended">
+    **Full capabilities — 121 tools**
+
+    All tools including real-time monitoring. Requires Node.js and a Figma token.
+  </Card>
+  <Card title="Cloud Mode" icon="cloud-arrow-up" href="/setup#-cloud-mode-web-ai-clients">
+    **Web AI clients — 101 tools**
+
+    Full write access from Claude.ai, v0, Replit, or Lovable. Pair with a code — no Node.js needed.
+  </Card>
+  <Card title="Remote (Read-Only)" icon="cloud" href="/setup#-remote-mode-read-only-exploration">
+    **Quick exploration — 9 tools**
+
+    Zero setup, just paste a URL. Read design data and take screenshots.
+  </Card>
+</Columns>
+
+### Quick Start: NPX Setup (Recommended)
+
+<Steps>
+  <Step title="Get Figma Token">
+    Visit [figma.com/developers/api#access-tokens](https://www.figma.com/developers/api#access-tokens) and create a Personal Access Token
+  </Step>
+  <Step title="Configure Your MCP Client">
+    Add the server to your MCP client config (Claude Code, Cursor, Windsurf, Claude Desktop, etc.):
+    ```json
+    {
+      "mcpServers": {
+        "figma-console": {
+          "command": "npx",
+          "args": ["-y", "figma-console-mcp@latest"],
+          "env": {
+            "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE"
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+  <Step title="Connect to Figma Desktop">
+    Install the Desktop Bridge Plugin — one-time import, no debug flags needed. Run it in your Figma file to connect.
+  </Step>
+  <Step title="Restart Your MCP Client">
+    Restart your MCP client to load the new config
+  </Step>
+</Steps>
+
+<Card title="Full Setup Guide" icon="book-open" href="/setup">
+  Detailed instructions for NPX, Cloud Mode, Local Git, and Remote installation across all AI clients.
+</Card>
+
+---
+
+## Resources
+
+<Columns cols={2}>
+  <Card title="Introduction" icon="circle-info" href="/introduction">
+    New to MCP? Start here.
+  </Card>
+  <Card title="FigJam Guide" icon="note-sticky" href="/figjam">
+    AI-powered whiteboarding — stickies, flowcharts, tables
+  </Card>
+  <Card title="Slides Guide" icon="presentation-screen" href="/slides">
+    AI-powered presentations — create, transition, navigate
+  </Card>
+  <Card title="Use Cases" icon="lightbulb" href="/use-cases">
+    Real scenarios and workflows
+  </Card>
+  <Card title="All Tools" icon="wrench" href="/tools">
+    Complete reference for 121 tools
+  </Card>
+  <Card title="Troubleshooting" icon="circle-question" href="/troubleshooting">
+    Common issues and solutions
+  </Card>
+</Columns>
+
+---
+
+<Note>
+**Open Source** — MIT licensed. Self-host for enterprise requirements or contribute on [GitHub](https://github.com/southleft/figma-console-mcp).
+</Note>
+
+<Tip>
+**Support this project** — Figma Console MCP is free and open source. If it's improved your workflow, consider [sponsoring its development](https://github.com/sponsors/southleft).
+</Tip>
