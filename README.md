@@ -84,160 +84,49 @@ npm run lint       # oxlint
 
 ---
 
-## Windows setup — step by step (source of truth for the Windows machine)
+## Windows setup (Antigravity) — start here, not from scratch
 
-> **Editor note:** the macOS setup above uses **Claude Code** (a terminal-based CLI). On Windows, this project uses **[Antigravity](https://antigravity.google/)** (Google's agentic IDE) instead — same MCP server (`figma-console`) and same Figma Desktop Bridge plugin, just a different client/editor wired up to them. The underlying bridge (Figma Desktop plugin ↔ WebSocket ↔ MCP server) is identical either way; only "how the MCP server gets registered" differs, covered in step 8 below.
+Code is already pushed: **https://github.com/AdityaGupta922/Figma_Claudecode** (private repo). On Windows you're only doing the pieces that can't carry over from macOS — installs, cloning, and re-registering the MCP server. Everything else (code, `package-lock.json`, the plugin source) comes with the clone.
 
-Goal: reproduce the exact same setup as macOS, with zero version drift. Do these in order.
+**Install once:**
+- Node.js **v26.x** ([nodejs.org](https://nodejs.org)) — repo has `.nvmrc` (`26.7.0`) + `engines` pin in `package.json`, so `npm install` won't silently drift versions.
+- Git for Windows ([git-scm.com](https://git-scm.com/download/win))
+- [Antigravity](https://antigravity.google/) (replaces Claude Code as the AI client here — same MCP server underneath)
+- Figma Desktop for Windows ([figma.com/downloads](https://www.figma.com/downloads/))
 
-### 0. Versions to match (from the macOS machine)
-
-| Tool | macOS version installed | What to install on Windows |
-|---|---|---|
-| Node.js | v26.7.0 | Node.js **v26.x** (same major line) — `.nvmrc` in this repo pins `26.7.0` exactly |
-| npm | 11.19.0 | comes bundled with Node 26.x — no separate install |
-| Client / editor | Claude Code 2.1.183 (CLI, native installer) | **Antigravity** (Windows installer — no Claude Code access on this machine) |
-| Figma | Desktop app | Figma Desktop app for Windows |
-| figma-console-mcp | pinned to **`1.40.0`** (not `@latest` — see note below) | same exact version, `1.40.0` |
-
-> **Why pin `1.40.0` instead of `@latest`**: `@latest` resolves to whatever's newest at install time. Since macOS was set up first, using `@latest` again on Windows could silently pull a newer MCP server build with different tool behavior. Pinning to the exact version macOS is running on removes that risk entirely.
-
-> Use **PowerShell** for everything below (not WSL/Git Bash) unless a step says otherwise. Reason: Figma Desktop for Windows is a native Windows app — if Node/Claude Code run inside WSL, the plugin manifest path and the loopback WebSocket can behave inconsistently across the WSL↔Windows network boundary. Keep everything on the native Windows side to match what worked on macOS.
-
-### 1. Install Node.js
-
-1. Download the Node.js **v26.x** Windows installer (`.msi`) from https://nodejs.org (choose the version that matches the major line above, not necessarily the exact patch).
-2. Run the installer, keep defaults (this also installs npm and adds both to PATH).
-3. Open a **new** PowerShell window and verify:
-   ```powershell
-   node -v
-   npm -v
-   ```
-   Expect `v26.x.x` and `11.x.x` respectively. If npm's major version differs a lot from `11`, run `npm install -g npm@11` to align.
-
-### 2. Install Git for Windows
-
-1. Download from https://git-scm.com/download/win, install with defaults.
-2. Verify: `git --version`
-
-### 3. Install Antigravity
-
-1. Download the Windows installer from https://antigravity.google/ and run it.
-2. Launch Antigravity, sign in with your Google account when prompted.
-3. This replaces Claude Code as the AI client for this project on Windows — the MCP server and Figma plugin underneath are the same, only the editor talking to them differs.
-
-### 4. Install Figma Desktop for Windows
-
-1. Download from https://www.figma.com/downloads/ → Figma Desktop for Windows.
-2. Install, sign in, and open the **My workflow** file: https://www.figma.com/design/m9sLka8FFiMTvunBP31EIa/My-workflow
-
-### 5. Get the project code onto the Windows machine
-
-This repo currently has **no git remote configured** (it was only initialized locally on macOS). Before moving to Windows, push it somewhere you can clone from:
-
-On macOS (one-time):
-```bash
-git remote add origin <your-repo-url>   # e.g. a GitHub repo you create
-git push -u origin master
-```
-
-On Windows, then:
+**Get the code + deps:**
 ```powershell
-git clone <your-repo-url> Figma_Claudecode
-cd Figma_Claudecode
-```
-
-If you'd rather not push to a remote, copy the whole project folder over (external drive / cloud sync), **excluding** `node_modules` and `dist` (they're OS/arch-specific and will be reinstalled/rebuilt anyway — see `.gitignore`).
-
-### 6. Install project dependencies
-
-```powershell
+git clone https://github.com/AdityaGupta922/Figma_Claudecode.git
 cd Figma_Claudecode
 npm install
 ```
-This reads the same `package-lock.json` committed on macOS, so you get **identical dependency versions** (React 19.2.8, Vite 8.2.2, Tailwind 4.3.3, etc.) — no drift. The repo's `package.json` also pins `engines.node`/`engines.npm` and there's an `.nvmrc` (`26.7.0`) — if you use `nvm-windows`, run `nvm use` in the project folder to match exactly.
 
-### 7. Get a Figma personal access token
+**Get a Figma token:** Figma → Settings → Security → Personal access tokens → generate one for this machine (don't reuse the Mac one).
 
-1. In Figma (web or desktop): **Settings → Security → Personal access tokens → Generate new token**.
-2. Copy it immediately (shown once). Do **not** reuse the macOS token if you'd rather keep them separate/revocable independently — either works, but generate your own to avoid having one token shared across two machines.
-
-### 8. Register the figma-console MCP server with Antigravity
-
-Antigravity reads MCP servers from a JSON config file, not a CLI command like Claude Code does.
-
-1. Open the config file directly, or go through the UI: **Antigravity → Settings → Customizations tab → Open MCP Config**. Either way it points at:
-   ```
-   C:\Users\<you>\.gemini\antigravity\mcp_config.json
-   ```
-   (create the file/folders if they don't exist yet).
-
-2. Set its contents to:
-   ```json
-   {
-     "mcpServers": {
-       "figma-console": {
-         "command": "npx",
-         "args": ["-y", "figma-console-mcp@1.40.0"],
-         "env": {
-           "FIGMA_ACCESS_TOKEN": "${FIGMA_ACCESS_TOKEN}",
-           "ENABLE_MCP_APPS": "true"
-         }
-       }
-     }
-   }
-   ```
-   Note the pinned `figma-console-mcp@1.40.0` (see the version-pinning note above) instead of `@latest`.
-
-3. `${FIGMA_ACCESS_TOKEN}` above is an environment-variable reference, not the literal token — **don't paste your token straight into this file**, since it's easy to accidentally commit or share. Instead set it as a real Windows environment variable once, in PowerShell (run as your user, not admin):
-   ```powershell
-   [System.Environment]::SetEnvironmentVariable("FIGMA_ACCESS_TOKEN", "<your-windows-token>", "User")
-   ```
-   Close and reopen Antigravity (and any terminal) afterward so it picks up the new env var.
-
-4. Save the config file and restart Antigravity (or use its "reload MCP servers" action if the Customizations tab has one) so it picks up `figma-console`.
-
-> **No conflict with macOS**: this config lives entirely in your Windows user profile (`~/.gemini/antigravity/mcp_config.json`), separate from Claude Code's own config store on macOS. Each machine keeps its own independent MCP registration and its own token — this file is **not** part of the git repo and should never be committed.
-
-### 9. Import the Figma Desktop Bridge plugin
-
-The cloned repo already contains the plugin at:
+**Register the MCP server** — edit (create if missing) `C:\Users\<you>\.gemini\antigravity\mcp_config.json`:
+```json
+{
+  "mcpServers": {
+    "figma-console": {
+      "command": "npx",
+      "args": ["-y", "figma-console-mcp@1.40.0"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "${FIGMA_ACCESS_TOKEN}",
+        "ENABLE_MCP_APPS": "true"
+      }
+    }
+  }
+}
 ```
-figma-console-mcp\figma-desktop-bridge\manifest.json
+Pinned to `1.40.0` (the exact version macOS runs) so behavior doesn't drift — not `@latest`. Then set the token as a real env var (don't paste it into the file):
+```powershell
+[System.Environment]::SetEnvironmentVariable("FIGMA_ACCESS_TOKEN", "<your-windows-token>", "User")
 ```
-(present after step 5/6, since it's inside the project you cloned — if you're copying the folder manually instead of cloning fresh, make sure `figma-console-mcp/` came along too, or re-clone it separately: `git clone https://github.com/southleft/figma-console-mcp.git`)
+Restart Antigravity so it picks up both.
 
-In Figma Desktop:
-1. `Plugins → Development → Import plugin from manifest…`
-2. Browse to the Windows path, e.g.:
-   ```
-   C:\Users\<you>\...\Figma_Claudecode\figma-console-mcp\figma-desktop-bridge\manifest.json
-   ```
-3. With the target file open, run it: `Plugins → Development → Figma Desktop Bridge → Run`.
-4. Its panel should show **Connected — AI …** — same as macOS.
+**Import the plugin into Figma Desktop:** `Plugins → Development → Import plugin from manifest…` → pick
+`...\Figma_Claudecode\figma-console-mcp\figma-desktop-bridge\manifest.json` (already in the clone). Open the file, run the plugin (`Plugins → Development → Figma Desktop Bridge → Run`), confirm its panel shows **Connected**.
 
-> Note: the first time `npx figma-console-mcp@latest` runs, it will also auto-install its own bundled copy of this plugin under `%USERPROFILE%\.figma-console-mcp\plugin\manifest.json`. Either manifest (the repo one or the auto-installed one) works — you only need to import **one** of them into Figma, not both.
+**Verify:** `netstat -ano | findstr 9223` should show a `LISTENING` line. Then ask Antigravity to check the Figma connection status — should report success.
 
-### 10. Verify the full chain on Windows
-
-1. Confirm the local WebSocket server is listening (PowerShell equivalent of the macOS `lsof` check):
-   ```powershell
-   netstat -ano | findstr 9223
-   ```
-   or:
-   ```powershell
-   Test-NetConnection -ComputerName localhost -Port 9223
-   ```
-   `TcpTestSucceeded : True` means the server is up.
-
-2. **Windows Defender Firewall** may prompt to allow `node.exe` to accept connections the first time the MCP server starts — click **Allow** (private networks is enough; it's a loopback-only connection to `localhost`, nothing external).
-
-3. Open Antigravity in the project folder and ask it to check the Figma connection status — it should report success, matching what worked with Claude Code on macOS.
-
-### Common Windows-specific gotchas
-
-- **Port already in use**: if something else holds 9223, the plugin just falls back to 9224–9232 automatically — no action needed, but if you're manually checking with `netstat`, check that whole range.
-- **Path separators**: always use the Windows path (`C:\...\manifest.json`) when importing into Figma Desktop — do not paste a macOS-style (`/Users/...`) path, it won't resolve.
-- **Corporate VPN/proxy**: if `npx -y figma-console-mcp@1.40.0` hangs on first run, it's trying to download the package from the npm registry — check proxy/VPN settings block npmjs.org.
-- **Antivirus**: some AV tools flag Node spawning child processes over a WebSocket port as suspicious on first run — this is the MCP server talking to the plugin, it's expected; whitelist the project folder / `node.exe` if it gets blocked.
-- **Env var not picked up**: if Antigravity reports `FIGMA_ACCESS_TOKEN` missing/empty after step 8, the environment variable was set after Antigravity (or its terminal) was already open — fully quit and relaunch Antigravity, not just reload the window.
+**Gotchas:** Windows Defender may prompt to allow `node.exe` on first run — allow it. If the env var doesn't show up, you set it after Antigravity was already open — fully restart the app.
